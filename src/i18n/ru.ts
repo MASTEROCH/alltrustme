@@ -127,6 +127,8 @@ export const ru: Record<string, string> = {
   open_status: 'Открыто — 11:00 – 21:00',
   always_open: '24/7',
   sel_cur: 'Выбор валюты',
+  cur_empty: 'Ничего не нашлось по «{q}»',
+  cur_clear: 'Очистить поиск',
   cur_search: 'Поиск валюты',
   cur_crypto: 'Криптовалюты',
   cur_fiat: 'Фиат',
@@ -353,6 +355,7 @@ export const ru: Record<string, string> = {
   // ActiveBonusBanner
   abb_title: 'У тебя активный бонус',
   abb_expires: 'Действует ещё {time}',
+  dur_hm: '{h} ч {m} мин',
   abb_go_ex: 'Перейти к обмену',
 
   // ActivateBonusModal
@@ -391,20 +394,6 @@ export const ru: Record<string, string> = {
   rwm_b2: '3 приглашённых друга — скидка на комиссию на неделю',
   rwm_cta: 'Участвовать',
   rwm_dont_show: 'Не показывать снова',
-
-  // Quick Send (экран обмена)
-  quick_send: 'Быстрая отправка',
-  quick_send_all: 'Все',
-  quick_send_add: 'Добавить',
-  quick_send_toast: 'Получатель выбран — продолжите обмен',
-
-  // Invite (приглашение друга)
-  invite_title: 'Пригласить друга',
-  invite_sub: 'Поделись ссылкой в Telegram. Друг совершит первый обмен — ты получишь билет розыгрыша.',
-  invite_link_label: 'Твоя реферальная ссылка',
-  invite_share_tg: 'Поделиться в Telegram',
-  invite_copy: 'Скопировать ссылку',
-  invite_share_text: 'Меняй крипту легально в Грузии — AllTrust.me. Лицензия НБГ, офисы в Тбилиси и Батуми. Заходи по моей ссылке:',
 
   // PromoModal
   promo_modal_title: 'Промокод',

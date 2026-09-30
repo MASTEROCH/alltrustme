@@ -4,7 +4,7 @@ import ScreenShell from '../components/ScreenShell'
 import TitleHeader from '../components/TitleHeader'
 import CurrencyIcon from '../components/CurrencyIcon'
 import CurrencyModal from '../modals/CurrencyModal'
-import QuickSend from '../components/QuickSend'
+import ShareCard from '../components/ShareCard'
 import PromoModal from '../modals/PromoModal'
 import ExchangeInfoModal, { EXINFO_FLAG } from '../modals/ExchangeInfoModal'
 import { useLang } from '../contexts/LanguageContext'
@@ -191,8 +191,8 @@ export default function ExchangeScreen() {
         <p className="mt-2 px-2 text-center text-[12px] leading-snug text-[var(--text3)]">{t('to_hint')}</p>
       )}
 
-      {/* QUICK SEND — недавние получатели */}
-      <QuickSend />
+      {/* Блок шеринга (заменил «Быструю отправку»: фейковые контакты не вели ни к какому действию) */}
+      <ShareCard className="mt-6" />
 
       {/* OFFICE — iOS grouped list с чекмарком и живым статусом */}
       <p className="section-label mt-6 mb-2">{t('office')}</p>
@@ -267,7 +267,7 @@ export default function ExchangeScreen() {
           haptic()
           setPromoOpen(true)
         }}
-        className="card press mt-6 flex w-full items-center gap-3 px-5 py-3.5 text-left"
+        className="card press mt-6 flex w-full items-center gap-3 px-5 py-3.5 text-start"
       >
         <span className="text-[var(--blue)]">
           <IconTicket size={20} />

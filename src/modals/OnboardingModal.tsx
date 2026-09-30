@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ModalOverlay from './ModalOverlay'
+import ModalOverlay, { useSheetDismiss } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import {
   IconShield,
@@ -11,90 +11,111 @@ import {
   IconCheckCircle,
   IconArrowRight,
 } from '../components/icons'
-import { haptic, hapticSelection } from '../utils/telegram'
+import { hapticSelection } from '../utils/telegram'
 import { setFlag } from '../utils/persist'
 
 export const ONBOARDING_FLAG = 'alltrust_onboarding_seen'
 
+const STEPS = 3
+
 /** Онбординг первого запуска — 3 шага: приветствие → как работает → доверие.
-   Точки прогресса + «Далее»/«Начать» + «Пропустить». Запоминается флагом. */
+   Паттерн Apple «What's New»: выход один и очевидный. Точки прогресса — в leading-слоте
+   полосы шторки, «Пропустить» — в trailing-слоте ВМЕСТО крестика (раньше крестик ложился
+   на «Пропустить»). Шаги въезжают по направлению, точки — кнопки. Запоминается флагом. */
 export default function OnboardingModal({ onClose }: { onClose: () => void }) {
-  const { t, rtl } = useLang()
   const [step, setStep] = useState(0)
-  const last = step === 2
+  const [dir, setDir] = useState<1 | -1>(1)
+  const last = step === STEPS - 1
 
   const finish = () => {
-    haptic()
     setFlag(ONBOARDING_FLAG)
     onClose()
   }
-  const next = () => {
-    if (last) return finish()
+  const go = (i: number) => {
+    if (i === step) return
     hapticSelection()
-    setStep((s) => s + 1)
+    setDir(i > step ? 1 : -1)
+    setStep(i)
   }
 
-  return (
-    <ModalOverlay onClose={finish} bare>
-      <div className="pt-1 pb-1">
-        {/* шапка: точки + пропустить */}
-        <div className="flex items-center justify-between">
-          <div className="flex gap-1.5">
-            {[0, 1, 2].map((i) => (
-              <span
-                key={i}
-                className="h-1.5 rounded-full transition-all duration-300"
-                style={{
-                  width: i === step ? 22 : 7,
-                  background: i === step ? 'var(--blue)' : 'var(--card2)',
-                }}
-              />
-            ))}
-          </div>
-          {!last && (
-            <button onClick={finish} className="text-[13px] font-medium text-[var(--text3)]">
-              {t('onb_skip')}
-            </button>
-          )}
-        </div>
-
-        {/* контент шага */}
-        <div key={step} className="onb-step mt-6 min-h-[300px]">
-          {step === 0 && <StepWelcome />}
-          {step === 1 && <StepHow />}
-          {step === 2 && <StepTrust />}
-        </div>
-
-        {/* CTA */}
+  const dots = (
+    <div className="onb-dots" role="tablist" aria-label={`${step + 1} / ${STEPS}`}>
+      {Array.from({ length: STEPS }, (_, i) => (
         <button
-          onClick={next}
-          className="btn btn-primary btn-block mt-4"
-        >
-          {last && (
-            <span style={{ transform: rtl ? 'scaleX(-1)' : 'none' }}>
-              <IconArrowRight size={19} />
-            </span>
-          )}
-          {last ? t('onb_start') : t('onb_next')}
-        </button>
+          key={i}
+          role="tab"
+          aria-selected={i === step}
+          aria-label={`${i + 1}`}
+          className={`onb-dot ${i === step ? 'is-on' : ''}`}
+          onClick={() => go(i)}
+        />
+      ))}
+    </div>
+  )
+
+  return (
+    <ModalOverlay onClose={finish} bare leading={dots} trailing={last ? null : <SkipButton />}>
+      {/* контент шага */}
+      <div key={step} className={`onb-step min-h-[312px] ${dir < 0 ? 'is-back' : ''}`}>
+        {step === 0 && <StepWelcome />}
+        {step === 1 && <StepHow />}
+        {step === 2 && <StepTrust />}
       </div>
+
+      <OnbCta last={last} onNext={() => go(step + 1)} />
     </ModalOverlay>
+  )
+}
+
+/** «Пропустить» закрывает шторку с анимацией — через контекст шторки, а не мгновенным onClose. */
+function SkipButton() {
+  const { t } = useLang()
+  const dismiss = useSheetDismiss()
+  return (
+    <button onClick={dismiss} className="sheet-text-btn">
+      {t('onb_skip')}
+    </button>
+  )
+}
+
+function OnbCta({ last, onNext }: { last: boolean; onNext: () => void }) {
+  const { t, rtl } = useLang()
+  const dismiss = useSheetDismiss()
+  return (
+    <button
+      onClick={() => {
+        if (last) dismiss()
+        else onNext()
+      }}
+      className="btn btn-primary btn-block mt-5"
+    >
+      <span key={last ? 'start' : 'next'} className="onb-cta-label">
+        {last ? t('onb_start') : t('onb_next')}
+        <span style={{ transform: rtl ? 'scaleX(-1)' : 'none' }} className="inline-flex">
+          <IconArrowRight size={19} />
+        </span>
+      </span>
+    </button>
   )
 }
 
 function StepWelcome() {
   const { t } = useLang()
   return (
-    <div className="flex flex-col items-center text-center">
-      <span
-        className="pop-in flex h-20 w-20 items-center justify-center rounded-[22px] p-3"
-        style={{ background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 55%, var(--blue2))', boxShadow: '0 12px 36px var(--blue-glow)' }}
-      >
+    <div className="onb-list flex flex-col items-center pt-2 text-center">
+      <span className="onb-logo" style={{ '--i': 0 } as React.CSSProperties}>
         <img src={`${import.meta.env.BASE_URL}alltrust-logo.svg`} alt="AllTrust.me" className="h-full w-full" />
       </span>
-      <h2 className="mt-5 text-[22px] font-extrabold leading-tight tracking-tight">{t('onb1_title')}</h2>
-      <p className="mt-3 max-w-[320px] text-[14px] leading-relaxed text-[var(--text2)]">{t('onb1_sub')}</p>
-      <span className="mt-5 inline-flex items-center gap-1.5 rounded-full border border-[rgba(52,210,126,0.35)] bg-[var(--green-dim)] px-3 py-1.5 text-[12px] font-semibold text-[var(--green)]">
+      <h2
+        className="mt-6 text-[25px] font-extrabold leading-[1.15] tracking-[-0.03em]"
+        style={{ '--i': 1 } as React.CSSProperties}
+      >
+        {t('onb1_title')}
+      </h2>
+      <p className="sheet-hero-sub mt-3" style={{ '--i': 2 } as React.CSSProperties}>
+        {t('onb1_sub')}
+      </p>
+      <span className="badge-ok mt-5" style={{ '--i': 3 } as React.CSSProperties}>
         <IconShield size={14} />
         {t('onb3_b1')}
       </span>
@@ -111,15 +132,13 @@ function StepHow() {
   ]
   return (
     <div>
-      <h2 className="text-center text-[21px] font-extrabold tracking-tight">{t('onb2_title')}</h2>
-      <div className="mt-6 flex flex-col gap-3">
+      <h2 className="sheet-hero-title mt-0 text-center">{t('onb2_title')}</h2>
+      <div className="onb-list mt-5 flex flex-col gap-2.5">
         {steps.map((st, i) => (
-          <div key={i} className="flex items-center gap-3.5 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-4">
-            <span className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--rs)] bg-[var(--blue-dim)] text-[var(--blue)]">
+          <div key={i} className="card flex items-center gap-3.5 p-4" style={{ '--i': i } as React.CSSProperties}>
+            <span className="icon-chip relative h-12 w-12 bg-[var(--blue-dim)] text-[var(--blue)]">
               <st.Icon size={23} />
-              <span className="absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-[var(--blue)] font-mono text-[11px] font-bold text-white">
-                {i + 1}
-              </span>
+              <span className="onb-num">{i + 1}</span>
             </span>
             <div className="min-w-0">
               <p className="text-[15px] font-semibold leading-snug">{st.t}</p>
@@ -141,18 +160,16 @@ function StepTrust() {
   ]
   return (
     <div>
-      <h2 className="text-center text-[21px] font-extrabold tracking-tight">{t('onb3_title')}</h2>
-      <div className="mt-6 flex flex-col gap-3">
+      <h2 className="sheet-hero-title mt-0 text-center">{t('onb3_title')}</h2>
+      <div className="onb-list mt-5 flex flex-col gap-2.5">
         {items.map((it, i) => (
-          <div key={i} className="flex items-center gap-3 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] px-4 py-3.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--green-dim)] text-[var(--green)]">
-              <IconCheckCircle size={19} />
+          <div key={i} className="card flex items-center gap-3 px-4 py-3.5" style={{ '--i': i } as React.CSSProperties}>
+            <span className="icon-chip h-10 w-10 rounded-full bg-[var(--blue-dim)] text-[var(--blue)]">
+              <it.Icon size={19} />
             </span>
-            <span className="flex items-center gap-2 text-[14px] font-medium leading-snug">
-              <span className="text-[var(--blue)]">
-                <it.Icon size={17} />
-              </span>
-              {it.text}
+            <span className="min-w-0 flex-1 text-[14px] font-medium leading-snug">{it.text}</span>
+            <span className="onb-check" style={{ '--i': i } as React.CSSProperties}>
+              <IconCheckCircle size={20} />
             </span>
           </div>
         ))}

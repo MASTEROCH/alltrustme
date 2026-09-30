@@ -45,7 +45,7 @@ export default function Header() {
               haptic()
               setNbgOpen(true)
             }}
-            className="press flex items-center gap-1 whitespace-nowrap rounded-full border border-[rgba(34,197,94,0.25)] bg-[var(--green-dim)] px-2.5 py-1.5 text-[11.5px] font-semibold text-[var(--green)]"
+            className="press flex items-center gap-1 whitespace-nowrap rounded-full border border-[rgba(47,210,126,0.25)] bg-[var(--green-dim)] px-2.5 py-1.5 text-[11.5px] font-semibold text-[var(--green)]"
           >
             <IconShieldMini size={11} />
             {t('nbg_badge')}

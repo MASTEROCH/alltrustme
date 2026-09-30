@@ -1,30 +1,38 @@
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react'
-import { IconCheck } from '../components/icons'
+import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { IconCheck, IconWarning } from '../components/icons'
 import { hapticNotify } from '../utils/telegram'
 
+export type ToastKind = 'ok' | 'error'
+
 interface ToastCtx {
-  toast: (msg: string) => void
+  /** kind 'error' — красная иконка + error-хаптика (раньше любая ошибка шла зелёной галочкой) */
+  toast: (msg: string, kind?: ToastKind) => void
 }
 
 const Ctx = createContext<ToastCtx | null>(null)
 
-export function ToastProvider({ children }: { children: ReactNode }) {
-  const [msg, setMsg] = useState<string | null>(null)
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+interface Item {
+  id: number
+  msg: string
+  kind: ToastKind
+  out: boolean
+}
 
-  const toast = useCallback((m: string) => {
-    setMsg(m)
-    hapticNotify('success')
+export function ToastProvider({ children }: { children: ReactNode }) {
+  const [item, setItem] = useState<Item | null>(null)
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const seq = useRef(0)
+
+  const toast = useCallback((msg: string, kind: ToastKind = 'ok') => {
+    hapticNotify(kind === 'error' ? 'error' : 'success')
+    // новый тост заменяет текущий «с нуля» (key) — анимация входа играет заново
+    setItem({ id: ++seq.current, msg, kind, out: false })
     if (timer.current) clearTimeout(timer.current)
-    timer.current = setTimeout(() => setMsg(null), 2200)
+    timer.current = setTimeout(() => {
+      setItem((it) => (it ? { ...it, out: true } : it))
+      timer.current = setTimeout(() => setItem(null), 260)
+    }, 2200)
   }, [])
 
   const value = useMemo<ToastCtx>(() => ({ toast }), [toast])
@@ -32,18 +40,21 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={value}>
       {children}
-      {msg && (
-        <div
-          className="toast-in fixed left-1/2 z-[300] flex -translate-x-1/2 items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--card2)] px-4 py-2.5 text-[13px] font-medium shadow-lg"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 110px)' }}
-          role="status"
-        >
-          <span className="text-[var(--green)]">
-            <IconCheck size={16} />
-          </span>
-          {msg}
-        </div>
-      )}
+      {/* Порталом в body и выше шторок: тост из модалки («Ссылка скопирована») раньше прятался под ней */}
+      {item &&
+        createPortal(
+          <div
+            key={item.id}
+            className={`toast ${item.kind === 'error' ? 'is-error' : ''} ${item.out ? 'is-out' : ''}`}
+            role={item.kind === 'error' ? 'alert' : 'status'}
+          >
+            <span className="toast-icon">
+              {item.kind === 'error' ? <IconWarning size={15} /> : <IconCheck size={15} />}
+            </span>
+            {item.msg}
+          </div>,
+          document.body,
+        )}
     </Ctx.Provider>
   )
 }

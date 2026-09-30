@@ -23,7 +23,7 @@ export default function NbgLicenseModal({ onClose }: { onClose: () => void }) {
   return (
     <ModalOverlay title={t('nbg_title')} onClose={onClose}>
       <div className="card mb-4 flex items-center gap-3 p-5" style={{ borderColor: 'rgba(47,210,126,0.25)' }}>
-        <span className="flex h-11 w-11 items-center justify-center rounded-[var(--rs)] bg-[rgba(34,197,94,0.15)] text-[var(--green)]">
+        <span className="flex h-11 w-11 items-center justify-center rounded-[var(--rs)] bg-[rgba(47,210,126,0.15)] text-[var(--green)]">
           <IconBank size={24} />
         </span>
         <p className="text-[13px] leading-snug text-[var(--text2)]">{t('nbg_disclaimer')}</p>

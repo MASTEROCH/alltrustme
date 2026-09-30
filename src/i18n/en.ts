@@ -116,6 +116,8 @@ export const en: Record<string, string> = {
   open_status: 'Open — 11:00 – 21:00',
   always_open: '24/7',
   sel_cur: 'Select currency',
+  cur_empty: 'No results for “{q}”',
+  cur_clear: 'Clear search',
   cur_search: 'Search currency',
   cur_crypto: 'Cryptocurrencies',
   cur_fiat: 'Fiat',
@@ -327,6 +329,7 @@ export const en: Record<string, string> = {
 
   abb_title: 'You have an active bonus',
   abb_expires: 'Valid for {time} more',
+  dur_hm: '{h}h {m}m',
   abb_go_ex: 'Proceed to exchange',
 
   act_title: 'Activate bonus exchange',
@@ -363,17 +366,7 @@ export const en: Record<string, string> = {
   rwm_cta: 'Join in',
   rwm_dont_show: 'Don’t show again',
 
-  quick_send: 'Quick Send',
-  quick_send_all: 'See all',
-  quick_send_add: 'Add',
-  quick_send_toast: 'Recipient selected — continue the exchange',
 
-  invite_title: 'Invite a friend',
-  invite_sub: 'Share the link on Telegram. Your friend makes their first exchange — you get a raffle ticket.',
-  invite_link_label: 'Your referral link',
-  invite_share_tg: 'Share on Telegram',
-  invite_copy: 'Copy link',
-  invite_share_text: 'Exchange crypto legally in Georgia — AllTrust.me. NBG-licensed, offices in Tbilisi and Batumi. Join via my link:',
 
   promo_modal_title: 'Promo code',
   promo_hint: 'A promo code gives a discount on the exchange fee',

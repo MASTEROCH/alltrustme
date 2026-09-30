@@ -87,10 +87,10 @@ export default function OrdersScreen() {
                     {o.give.amount} <span className="text-[var(--text2)]">{o.give.ticker}</span>
                   </p>
                 </div>
-                <span className="shrink-0 text-[var(--text3)]">
+                <span className="shrink-0 text-[var(--text3)] rtl:-scale-x-100">
                   <IconArrowRight size={18} />
                 </span>
-                <div className="flex-1 text-right">
+                <div className="flex-1 text-end">
                   <p className="text-[11px] uppercase tracking-wide text-[var(--text3)]">{t('ord_got')}</p>
                   <p className="mt-0.5 font-mono text-[16px] font-bold text-[var(--green)]">
                     {o.get.amount} <span className="opacity-80">{o.get.ticker}</span>

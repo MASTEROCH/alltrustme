@@ -125,6 +125,8 @@ export const tr: Record<string, string> = {
   open_status: 'Açık — 11:00 – 21:00',
   always_open: '7/24',
   sel_cur: 'Para birimi seçin',
+  cur_empty: '“{q}” için sonuç yok',
+  cur_clear: 'Aramayı temizle',
   cur_search: 'Para birimi ara',
   cur_crypto: 'Kripto paralar',
   cur_fiat: 'Fiat',
@@ -351,6 +353,7 @@ export const tr: Record<string, string> = {
   // ActiveBonusBanner
   abb_title: 'Aktif bir bonusunuz var',
   abb_expires: '{time} daha geçerli',
+  dur_hm: '{h} sa {m} dk',
   abb_go_ex: 'İşleme geç',
 
   // ActivateBonusModal
@@ -389,20 +392,6 @@ export const tr: Record<string, string> = {
   rwm_b2: '3 davet edilen arkadaş — bir hafta boyunca komisyon indirimi',
   rwm_cta: 'Katıl',
   rwm_dont_show: 'Tekrar gösterme',
-
-  // Quick Send (işlem ekranı)
-  quick_send: 'Hızlı Gönderim',
-  quick_send_all: 'Tümünü gör',
-  quick_send_add: 'Ekle',
-  quick_send_toast: 'Alıcı seçildi — işleme devam edin',
-
-  // Invite (arkadaş daveti)
-  invite_title: 'Bir arkadaşını davet et',
-  invite_sub: 'Bağlantıyı Telegram\'da paylaş. Arkadaşın ilk işlemini yapar — sen bir çekiliş bileti alırsın.',
-  invite_link_label: 'Referans bağlantınız',
-  invite_share_tg: 'Telegram\'da paylaş',
-  invite_copy: 'Bağlantıyı kopyala',
-  invite_share_text: 'Gürcistan\'da kriptoyu yasal şekilde bozdur — AllTrust.me. NBG lisanslı, Tiflis ve Batum\'da ofisler. Bağlantımdan katıl:',
 
   // PromoModal
   promo_modal_title: 'Promosyon kodu',

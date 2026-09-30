@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import ModalOverlay from './ModalOverlay'
+import { useRef, useState } from 'react'
+import ModalOverlay, { type SheetHandle } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import { haptic } from '../utils/telegram'
 
@@ -14,9 +14,10 @@ export default function PromoModal({
 }) {
   const { t } = useLang()
   const [code, setCode] = useState(initial)
+  const sheet = useRef<SheetHandle>(null)
 
   return (
-    <ModalOverlay title={t('promo_modal_title')} onClose={onClose}>
+    <ModalOverlay title={t('promo_modal_title')} onClose={onClose} sheet={sheet}>
       <div className="card px-5 py-4 transition-colors focus-within:border-[var(--blue)]">
         <input
           value={code}
@@ -31,7 +32,7 @@ export default function PromoModal({
         onClick={() => {
           haptic()
           onApply(code.trim() || 'APPHUB')
-          onClose()
+          sheet.current?.dismiss()
         }}
         className="btn btn-primary btn-block mt-4"
       >

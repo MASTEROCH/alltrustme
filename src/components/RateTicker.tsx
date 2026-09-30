@@ -58,7 +58,7 @@ export default function RateTicker() {
               onClick={() => openPair(r.pair)}
               aria-label={`${r.pair} ${r.value}`}
               tabIndex={i >= ticker.length ? -1 : 0}
-              className="card-inset press flex shrink-0 flex-col items-start gap-1 px-3.5 py-3 text-left"
+              className="card-inset press flex shrink-0 flex-col items-start gap-1 px-3.5 py-3 text-start"
             >
               <span className="text-[12px] text-[var(--text3)]">{r.pair}</span>
               <svg

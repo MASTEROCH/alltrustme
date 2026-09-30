@@ -1,4 +1,5 @@
-import ModalOverlay from './ModalOverlay'
+import { useRef } from 'react'
+import ModalOverlay, { type SheetHandle } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import { IconGift, IconExchange, IconUsers, IconRocket, IconStories, IconTicket } from '../components/icons'
 import { haptic } from '../utils/telegram'
@@ -8,23 +9,22 @@ export const RAFFLE_WELCOME_FLAG = 'alltrust_raffle_welcome_seen'
 
 export default function RaffleWelcomeModal({ onClose }: { onClose: () => void }) {
   const { t } = useLang()
-  const dismiss = () => {
-    haptic()
+  const sheet = useRef<SheetHandle>(null)
+  // любое закрытие (кнопка, фон, свайп, «назад») — после анимации; флаг ставится там же
+  const done = () => {
     setFlag(RAFFLE_WELCOME_FLAG)
     onClose()
   }
+  const dismiss = () => sheet.current?.dismiss()
 
   return (
-    <ModalOverlay onClose={dismiss} bare>
-      <div className="flex flex-col items-center pt-2 text-center">
-        <span
-          className="icon-chip pop-in h-16 w-16 text-[var(--gold)]"
-          style={{ background: 'var(--gold-dim)' }}
-        >
-          <IconGift size={34} />
+    <ModalOverlay onClose={done} bare sheet={sheet}>
+      <div className="sheet-hero">
+        <span className="icon-chip sheet-hero-icon bg-[var(--gold-dim)] text-[var(--gold)]">
+          <IconGift size={30} />
         </span>
-        <h2 className="mt-4 text-[20px] font-bold">{t('rwm_title')}</h2>
-        <p className="mt-1.5 max-w-[320px] text-[14px] text-[var(--text2)]">{t('rwm_sub')}</p>
+        <h2 className="sheet-hero-title">{t('rwm_title')}</h2>
+        <p className="sheet-hero-sub">{t('rwm_sub')}</p>
       </div>
 
       <p className="section-label mb-2 mt-6">{t('rwm_how')}</p>
@@ -35,7 +35,7 @@ export default function RaffleWelcomeModal({ onClose }: { onClose: () => void })
       </div>
 
       <div
-        className="mt-4 rounded-[var(--r)] border border-[rgba(245,158,11,0.25)] p-5"
+        className="mt-4 rounded-[var(--r)] border border-[rgba(245,176,66,0.25)] p-5"
         style={{ background: 'var(--gold-dim)' }}
       >
         <h4 className="flex items-center gap-2 text-[15px] font-bold text-[var(--gold)]">
@@ -59,14 +59,16 @@ export default function RaffleWelcomeModal({ onClose }: { onClose: () => void })
       </div>
 
       <button
-        onClick={dismiss}
-        className="press mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-3.5 text-[15px] font-bold text-white"
-        style={{ background: 'linear-gradient(150deg, #ffd27a, var(--gold) 55%, #e08a1e)', color: '#2a1800' }}
+        onClick={() => {
+          haptic('medium')
+          dismiss()
+        }}
+        className="btn btn-gold btn-block mt-4"
       >
         <IconTicket size={18} />
         {t('rwm_cta')}
       </button>
-      <button onClick={dismiss} className="mt-2 w-full py-2 text-[14px] text-[var(--text3)]">
+      <button onClick={dismiss} className="btn btn-tertiary is-muted btn-block mt-1">
         {t('rwm_dont_show')}
       </button>
     </ModalOverlay>

@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import ModalOverlay from './ModalOverlay'
+import { useRef, useState } from 'react'
+import ModalOverlay, { type SheetHandle } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import Glyph, { TONE_COLOR, TONE_DIM } from '../components/Glyph'
 import { IconChevronRight } from '../components/icons'
-import { haptic, hapticSelection } from '../utils/telegram'
+import { hapticSelection } from '../utils/telegram'
 import type { Prize } from '../data/prizes'
 
 export default function PrizeModal({ prize, onClose }: { prize: Prize; onClose: () => void }) {
@@ -13,49 +13,52 @@ export default function PrizeModal({ prize, onClose }: { prize: Prize; onClose: 
   const dim = TONE_DIM[prize.tone]
   const carousel = prize.carousel ?? [prize.icon]
   const multi = carousel.length > 1
+  const sheet = useRef<SheetHandle>(null)
 
   const move = (dir: number) => {
     hapticSelection()
     setSlide((s) => (s + dir + carousel.length) % carousel.length)
   }
 
-  return (
-    <ModalOverlay onClose={onClose} bare>
-      {/* Хедер */}
-      <div className="mb-4 flex items-center gap-3">
-        <span className="icon-chip h-12 w-12" style={{ background: dim, color }}>
-          <Glyph name={prize.icon} size={26} />
-        </span>
-        <div>
-          <p className="text-[12px] font-bold uppercase tracking-wider text-[var(--text3)]">
-            {t(prize.placeKey)}
-          </p>
-          <h2 className="text-[18px] font-bold" style={{ color }}>
-            {t(prize.titleKey)}
-          </h2>
-        </div>
+  // Хедер приза живёт в leading-слоте полосы шторки (как заголовок навбара iOS):
+  // крестик в своём слоте, длинное название больше не залезает под него
+  const header = (
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="icon-chip h-11 w-11" style={{ background: dim, color }}>
+        <Glyph name={prize.icon} size={24} />
+      </span>
+      <div className="min-w-0">
+        <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text3)]">{t(prize.placeKey)}</p>
+        <h2 className="clamp-2 text-[17px] font-bold leading-tight" style={{ color }}>
+          {t(prize.titleKey)}
+        </h2>
       </div>
+    </div>
+  )
+
+  return (
+    <ModalOverlay onClose={onClose} bare leading={header} sheet={sheet}>
 
       {/* Карусель / большая иконка */}
       <div
         className="relative flex h-[180px] items-center justify-center overflow-hidden rounded-[var(--r)]"
         style={{ background: `linear-gradient(135deg, ${dim}, transparent), var(--card)` }}
       >
-        <span style={{ color }}>
+        <span key={slide} className="prize-glyph" style={{ color }}>
           <Glyph name={carousel[slide]} size={84} />
         </span>
         {multi && (
           <>
             <button
               onClick={() => move(-1)}
-              className="press absolute left-2 flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(0,0,0,0.4)] text-white"
+              className="press absolute start-2 flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(0,0,0,0.4)] text-white"
               style={{ transform: rtl ? 'scaleX(-1)' : undefined }}
             >
               <IconChevronRight size={18} className="rotate-180" />
             </button>
             <button
               onClick={() => move(1)}
-              className="press absolute right-2 flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(0,0,0,0.4)] text-white"
+              className="press absolute end-2 flex h-9 w-9 items-center justify-center rounded-full bg-[rgba(0,0,0,0.4)] text-white"
               style={{ transform: rtl ? 'scaleX(-1)' : undefined }}
             >
               <IconChevronRight size={18} />
@@ -64,7 +67,7 @@ export default function PrizeModal({ prize, onClose }: { prize: Prize; onClose: 
               {carousel.map((_, i) => (
                 <span
                   key={i}
-                  className="h-1.5 rounded-full transition-all"
+                  className="h-1.5 rounded-full transition-[width,background-color] duration-500 ease-[var(--ease-snappy)]"
                   style={{
                     width: i === slide ? 16 : 6,
                     background: i === slide ? color : 'rgba(255,255,255,0.4)',
@@ -97,20 +100,14 @@ export default function PrizeModal({ prize, onClose }: { prize: Prize; onClose: 
 
       {prize.footerKey && (
         <div
-          className="mt-4 rounded-[var(--rs)] border border-[rgba(245,158,11,0.25)] px-3.5 py-3.5 text-[13px] text-[var(--gold)]"
+          className="mt-4 rounded-[var(--rs)] border border-[rgba(245,176,66,0.25)] px-3.5 py-3.5 text-[13px] text-[var(--gold)]"
           style={{ background: 'var(--gold-dim)' }}
         >
           {t(prize.footerKey)}
         </div>
       )}
 
-      <button
-        onClick={() => {
-          haptic()
-          onClose()
-        }}
-        className="btn btn-primary btn-block mt-4"
-      >
+      <button onClick={() => sheet.current?.dismiss()} className="btn btn-secondary btn-block mt-4">
         {t('close')}
       </button>
     </ModalOverlay>

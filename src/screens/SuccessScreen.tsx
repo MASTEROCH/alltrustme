@@ -1,10 +1,9 @@
 import { useEffect, useMemo } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useLang } from '../contexts/LanguageContext'
-import { useToast } from '../contexts/ToastContext'
+import { useShare } from '../hooks/useShare'
 import { IconClose, IconShare, IconTicket, IconTelegram } from '../components/icons'
 import { haptic, hapticNotify, openExternal } from '../utils/telegram'
-import { shareStory, copyLink, tgShareUrl } from '../utils/share'
 import type { ExchangeSummary } from '../types'
 
 const CHAT = 'https://t.me/AllTrustMe_Ge'
@@ -15,7 +14,7 @@ const CONFETTI_COLORS = ['var(--blue)', 'var(--cyan)', 'var(--green)', 'var(--go
 export default function SuccessScreen() {
   const { t } = useLang()
   const navigate = useNavigate()
-  const { toast } = useToast()
+  const share = useShare()
   const state = (useLocation().state ?? null) as Partial<ExchangeSummary> | null
 
   const give = state?.give ?? '—'
@@ -23,9 +22,10 @@ export default function SuccessScreen() {
   const office = state?.office || t('default_office')
   const promo = state?.promo ?? 'APPHUB'
 
+  const valid = Boolean(state?.give)
   useEffect(() => {
-    hapticNotify('success')
-  }, [])
+    if (valid) hapticNotify('success')
+  }, [valid])
 
   // детерминированный залп: 18 частиц по кругу с разбросом
   const confetti = useMemo(
@@ -49,31 +49,15 @@ export default function SuccessScreen() {
     navigate('/', { replace: true })
   }
 
-  const onStory = async () => {
-    haptic('medium')
-    const media = `${window.location.origin}${import.meta.env.BASE_URL}alltrust-logo.svg`
-    const res = await shareStory(t('share_text'), media)
-    if (res === 'shared') toast(t('toast_shared'))
-    else if (res === 'copied') toast(t('toast_text_copied'))
-    else toast(t('toast_copy_failed'))
-  }
-
-  const onInvite = async () => {
-    haptic()
-    // в Telegram — сразу share-лист чата; вне — копируем ссылку
-    if (window.Telegram?.WebApp?.initData) {
-      openExternal(tgShareUrl(t('share_text')))
-      return
-    }
-    toast((await copyLink()) ? t('toast_link_copied') : t('toast_copy_failed'))
-  }
-
   const rows: Array<[string, React.ReactNode]> = [
     [t('give_label'), <span className="font-mono font-semibold">{give}</span>],
     [t('get_label'), <span className="font-mono font-semibold text-[var(--green)]">{get}</span>],
     [t('office_label'), <span className="font-medium">{office}</span>],
     [t('promo_short'), <span className="font-mono font-semibold text-[var(--blue)]">{promo}</span>],
   ]
+
+  // прямой заход без заявки — не показываем «—» вместо сумм, возвращаем в калькулятор
+  if (!valid) return <Navigate to="/exchange" replace />
 
   return (
     <div className="screen">
@@ -131,7 +115,7 @@ export default function SuccessScreen() {
           {t('suc_ticket')}
         </button>
 
-        <div className="card list mt-6 w-full text-left">
+        <div className="card list mt-6 w-full text-start">
           {rows.map(([label, value], i) => (
             <div key={i} className="row justify-between text-[15px]" style={{ paddingTop: '0.8rem', paddingBottom: '0.8rem' }}>
               <span className="text-[var(--text2)]">{label}</span>
@@ -156,14 +140,13 @@ export default function SuccessScreen() {
 
         <div className="mt-4 flex w-full gap-2">
           <button
-            onClick={onStory}
-            className="btn btn-sm flex-1 text-white"
-            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d 60%, #fcb045)' }}
+            onClick={share.story}
+            className="btn btn-sm btn-secondary btn-story flex-1"
           >
             <IconShare size={17} />
             {t('share_stories')}
           </button>
-          <button onClick={onInvite} className="btn btn-sm btn-secondary flex-[1.4]">
+          <button onClick={share.invite} className="btn btn-sm btn-secondary flex-[1.4]">
             <IconTicket size={16} />
             {t('share_invite')}
           </button>

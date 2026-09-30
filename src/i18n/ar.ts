@@ -115,6 +115,8 @@ export const ar: Record<string, string> = {
   open_status: 'مفتوح — 11:00 – 21:00',
   always_open: 'على مدار الساعة',
   sel_cur: 'اختر العملة',
+  cur_empty: 'لا نتائج لـ «{q}»',
+  cur_clear: 'مسح البحث',
   cur_search: 'ابحث عن عملة',
   cur_crypto: 'العملات المشفّرة',
   cur_fiat: 'العملات النقدية',
@@ -326,6 +328,7 @@ export const ar: Record<string, string> = {
 
   abb_title: 'لديك مكافأة فعّالة',
   abb_expires: 'صالحة لمدة {time} أخرى',
+  dur_hm: '{h} س {m} د',
   abb_go_ex: 'المتابعة إلى التبديل',
 
   act_title: 'تفعيل عملية التبديل الإضافية',
@@ -362,17 +365,7 @@ export const ar: Record<string, string> = {
   rwm_cta: 'شارك',
   rwm_dont_show: 'لا تُظهره مرّة أخرى',
 
-  quick_send: 'إرسال سريع',
-  quick_send_all: 'عرض الكل',
-  quick_send_add: 'إضافة',
-  quick_send_toast: 'تم اختيار المستلِم — تابع عملية التبديل',
 
-  invite_title: 'ادعُ صديقاً',
-  invite_sub: 'شارك الرابط على Telegram. يقوم صديقك بأول عملية تبديل — وتحصل على تذكرة سحب.',
-  invite_link_label: 'رابط الإحالة الخاص بك',
-  invite_share_tg: 'شارك على Telegram',
-  invite_copy: 'انسخ الرابط',
-  invite_share_text: 'بدّل العملات المشفّرة بشكل قانوني في جورجيا — AllTrust.me. مرخّص من NBG، مكاتب في تبليسي وباتومي. انضمّ عبر رابطي:',
 
   promo_modal_title: 'رمز ترويجي',
   promo_hint: 'يمنحك الرمز الترويجي خصماً على رسوم التبديل',

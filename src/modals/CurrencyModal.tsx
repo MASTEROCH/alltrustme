@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import ModalOverlay from './ModalOverlay'
+import { useMemo, useRef, useState } from 'react'
+import ModalOverlay, { type SheetHandle } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import { CURRENCIES } from '../data/currencies'
 import CurrencyIcon from '../components/CurrencyIcon'
@@ -16,6 +16,7 @@ interface Props {
 export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
   const { t } = useLang()
   const [q, setQ] = useState('')
+  const sheet = useRef<SheetHandle>(null)
 
   const { crypto, fiat } = useMemo(() => {
     const term = q.trim().toLowerCase()
@@ -30,7 +31,7 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
   const pick = (ticker: string) => {
     hapticSelection()
     onSelect(ticker)
-    onClose()
+    sheet.current?.dismiss()
   }
 
   const Row = ({ c }: { c: Currency }) => {
@@ -38,7 +39,7 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
     return (
       <button
         onClick={() => pick(c.ticker)}
-        className={`card press flex w-full items-center gap-3 px-3 py-3.5 text-left ${active ? 'is-selected' : ''}`}
+        className={`card press flex w-full items-center gap-3 px-3 py-3.5 text-start ${active ? 'is-selected' : ''}`}
         style={{ borderRadius: 'var(--rs)' }}
       >
         <CurrencyIcon currency={c} size={30} />
@@ -59,7 +60,7 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
   }
 
   return (
-    <ModalOverlay title={t('sel_cur')} onClose={onClose}>
+    <ModalOverlay title={t('sel_cur')} onClose={onClose} sheet={sheet}>
       <div className="card mb-3 flex items-center gap-2 px-3" style={{ borderRadius: 'var(--rs)' }}>
         <span className="text-[var(--text3)]">
           <IconSearch size={18} />
@@ -82,6 +83,19 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
             ))}
           </div>
         </>
+      )}
+
+      {/* пустой поиск — не белая пустота, а ответ и выход */}
+      {crypto.length === 0 && fiat.length === 0 && (
+        <div className="flex flex-col items-center py-8 text-center">
+          <span className="icon-chip h-12 w-12 rounded-full bg-[var(--card2)] text-[var(--text3)]">
+            <IconSearch size={22} />
+          </span>
+          <p className="mt-3 text-[14px] text-[var(--text2)]">{t('cur_empty', { q: q.trim() })}</p>
+          <button onClick={() => setQ('')} className="btn btn-tertiary mt-1">
+            {t('cur_clear')}
+          </button>
+        </div>
       )}
 
       {fiat.length > 0 && (

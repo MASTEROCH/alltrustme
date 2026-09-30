@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ShareCard from '../components/ShareCard'
 import ScreenShell from '../components/ScreenShell'
 import TitleHeader from '../components/TitleHeader'
 import Glyph, { TONE_COLOR, TONE_DIM } from '../components/Glyph'
@@ -15,21 +16,17 @@ import { PRIZES, type Prize } from '../data/prizes'
 import { SPONSORS } from '../data/sponsors'
 import {
   IconTicket,
-  IconGift,
   IconExchange,
   IconUsers,
   IconBolt,
   IconChevronRight,
   IconQuestion,
   IconRocket,
-  IconStories,
-  IconLink,
-  IconShareArrow,
   IconCheck,
 } from '../components/icons'
-import { haptic, openExternal, isTma } from '../utils/telegram'
+import { haptic } from '../utils/telegram'
+import { prefersReducedMotion } from '../utils/spring'
 import { copyToClipboard } from '../utils/format'
-import { shareStory, shareLink, copyLink, tgShareUrl } from '../utils/share'
 import { getFlag } from '../utils/persist'
 
 // мок-данные (бэкенд подключим позже)
@@ -44,7 +41,7 @@ export default function RaffleScreen() {
   const { t, rtl } = useLang()
   const { toast } = useToast()
   const navigate = useNavigate()
-  const shareRef = useRef<HTMLDivElement>(null)
+  const shareRef = useRef<HTMLElement>(null)
 
   const [prize, setPrize] = useState<Prize | null>(null)
   const [welcome, setWelcome] = useState(false)
@@ -63,7 +60,7 @@ export default function RaffleScreen() {
 
   const scrollToShare = () => {
     haptic()
-    shareRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    shareRef.current?.scrollIntoView({ behavior: prefersReducedMotion() ? 'auto' : 'smooth', block: 'center' })
     setShareGlow(true)
     setTimeout(() => setShareGlow(false), 3200)
   }
@@ -74,26 +71,7 @@ export default function RaffleScreen() {
       setPromoCopied(true)
       toast(t('toast_promo_copied'))
       setTimeout(() => setPromoCopied(false), 2000)
-    } else toast(t('toast_copy_failed'))
-  }
-
-  // Честный шеринг: слово об успехе — только ПОСЛЕ результата
-  const onStory = async () => {
-    haptic('medium')
-    const media = `${window.location.origin}${import.meta.env.BASE_URL}alltrust-logo.svg`
-    const r = await shareStory(t('share_text'), media)
-    toast(r === 'shared' ? t('toast_shared') : r === 'copied' ? t('toast_text_copied') : t('toast_copy_failed'))
-  }
-  const onInvite = async () => {
-    haptic()
-    if (isTma()) return openExternal(tgShareUrl(t('share_text')))
-    toast((await copyLink()) ? t('toast_link_copied') : t('toast_copy_failed'))
-  }
-  const onNative = async () => {
-    haptic()
-    const r = await shareLink(t('share_text'))
-    if (r === 'shared') toast(t('toast_shared'))
-    else if (r === 'copied') toast(t('toast_link_copied'))
+    } else toast(t('toast_copy_failed'), 'error')
   }
 
   const chevron = (
@@ -157,7 +135,7 @@ export default function RaffleScreen() {
           {t('tickets_count_sub')}
         </p>
 
-        <div className="relative mt-5 text-left">
+        <div className="relative mt-5 text-start">
           <div className="mb-2 flex items-center justify-between">
             <span className="text-[14px] font-semibold text-[rgba(255,224,170,0.85)]">
               {t('season_progress')}
@@ -190,7 +168,7 @@ export default function RaffleScreen() {
               haptic()
               setPrize(p)
             }}
-            className="card press flex items-center gap-3 p-4 text-left"
+            className="card press flex items-center gap-3 p-4 text-start"
           >
             <span className="icon-chip h-[42px] w-[42px]" style={{ background: TONE_DIM[p.tone], color: TONE_COLOR[p.tone] }}>
               <Glyph name={p.icon} size={22} />
@@ -222,7 +200,7 @@ export default function RaffleScreen() {
       </div>
       <button
         onClick={scrollToShare}
-        className="card press w-full p-5 text-left"
+        className="card press w-full p-5 text-start"
       >
         <p className="text-[13px] leading-snug text-[var(--text2)]">{t('ref_rule')}</p>
 
@@ -272,7 +250,7 @@ export default function RaffleScreen() {
       {/* Управление бонусом: баннер или кнопка */}
       {activeCode ? (
         <div className="mt-2.5">
-          <ActiveBonusBanner code={activeCode} timeLeft="23 ч 12 м" />
+          <ActiveBonusBanner code={activeCode} timeLeft={t('dur_hm', { h: 23, m: 12 })} />
         </div>
       ) : (
         BONUS_AVAILABLE > 0 && (
@@ -335,7 +313,7 @@ export default function RaffleScreen() {
             haptic()
             setUpgrade(true)
           }}
-          className="press mt-4 flex w-full items-center gap-3 rounded-[var(--rs)] border border-[rgba(245,158,11,0.25)] p-4 text-left"
+          className="press mt-4 flex w-full items-center gap-3 rounded-[var(--rs)] border border-[rgba(245,176,66,0.25)] p-4 text-start"
           style={{ background: 'var(--gold-dim)' }}
         >
           <span className="text-[var(--gold)]">
@@ -350,38 +328,7 @@ export default function RaffleScreen() {
       </div>
 
       {/* Блок шеринга */}
-      <div
-        ref={shareRef}
-        className={`card mt-6 p-5 ${shareGlow ? 'glow-border' : ''}`}
-      >
-        <p className="flex items-center gap-1.5 text-[14px] font-semibold">
-          <IconGift size={16} className="text-[var(--gold)]" />
-          {t('share_title')}
-        </p>
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          <ShareBtn
-            title={t('share_stories_t')}
-            sub={t('share_stories_s')}
-            icon={<IconStories size={20} />}
-            style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d 60%, #fcb045)', color: '#fff' }}
-            onClick={onStory}
-          />
-          <ShareBtn
-            title={t('share_invite_t')}
-            sub={t('share_invite_s')}
-            icon={<IconLink size={20} />}
-            style={{ background: 'var(--blue-dim)', color: 'var(--blue)' }}
-            onClick={onInvite}
-          />
-          <ShareBtn
-            title={t('share_native_t')}
-            sub={t('share_native_s')}
-            icon={<IconShareArrow size={20} />}
-            style={{ background: 'rgba(48,66,116,0.5)', color: 'var(--text2)' }}
-            onClick={onNative}
-          />
-        </div>
-      </div>
+      <ShareCard ref={shareRef} glow={shareGlow} className="mt-6" />
 
       {/* Нижний CTA */}
       <button
@@ -452,32 +399,6 @@ function EarnRow({
         <IconTicket size={15} />
       </span>
       <span className="sr-only">{t('tickets')}</span>
-    </button>
-  )
-}
-
-function ShareBtn({
-  title,
-  sub,
-  icon,
-  style,
-  onClick,
-}: {
-  title: string
-  sub: string
-  icon: React.ReactNode
-  style: React.CSSProperties
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="press flex flex-col items-center gap-1.5 rounded-[var(--rs)] py-3"
-      style={style}
-    >
-      {icon}
-      <span className="text-[13px] font-bold leading-none">{title}</span>
-      <span className="text-[10px] leading-none opacity-80">{sub}</span>
     </button>
   )
 }

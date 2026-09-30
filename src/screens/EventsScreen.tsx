@@ -81,7 +81,7 @@ function EventCard({ ev }: { ev: EventMock }) {
     <button
       onClick={onClick}
       disabled={ev.past}
-      className={`card overflow-hidden text-left ${ev.past ? '' : 'press'}`}
+      className={`card overflow-hidden text-start ${ev.past ? '' : 'press'}`}
     >
       {/* Обложка — стоковое фото (в проде заменим), иконка как фолбэк */}
       <div className="relative flex h-[140px] items-center justify-center overflow-hidden" style={{ background: ev.gradient }}>
@@ -95,6 +95,12 @@ function EventCard({ ev }: { ev: EventMock }) {
               className="img-fade absolute inset-0 h-full w-full object-cover"
               style={{ filter: ev.past ? 'saturate(0.7) brightness(0.78)' : 'none' }}
               onLoad={(e) => e.currentTarget.classList.add('is-loaded')}
+              // битая картинка: гасим скелетон (иначе мерцал вечно) — остаётся градиент обложки
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+                const skel = e.currentTarget.previousElementSibling as HTMLElement | null
+                if (skel) skel.style.display = 'none'
+              }}
             />
             {/* затемнение снизу+сверху для читаемости шильдиков */}
             <div

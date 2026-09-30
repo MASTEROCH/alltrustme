@@ -125,6 +125,8 @@ export const ge: Record<string, string> = {
   open_status: 'ღიაა — 11:00 – 21:00',
   always_open: '24/7',
   sel_cur: 'ვალუტის არჩევა',
+  cur_empty: '„{q}“ — ვერაფერი მოიძებნა',
+  cur_clear: 'ძიების გასუფთავება',
   cur_search: 'ვალუტის ძიება',
   cur_crypto: 'კრიპტოვალუტები',
   cur_fiat: 'ფიატი',
@@ -351,6 +353,7 @@ export const ge: Record<string, string> = {
   // ActiveBonusBanner
   abb_title: 'თქვენ გაქვთ აქტიური ბონუსი',
   abb_expires: 'მოქმედებს კიდევ {time}',
+  dur_hm: '{h} სთ {m} წთ',
   abb_go_ex: 'გადასვლა გაცვლაზე',
 
   // ActivateBonusModal
@@ -389,20 +392,6 @@ export const ge: Record<string, string> = {
   rwm_b2: '3 მოწვეული მეგობარი — ფასდაკლება საკომისიოზე ერთი კვირით',
   rwm_cta: 'მონაწილეობა',
   rwm_dont_show: 'აღარ მაჩვენო',
-
-  // Quick Send (გაცვლის ეკრანი)
-  quick_send: 'სწრაფი გაგზავნა',
-  quick_send_all: 'ყველა',
-  quick_send_add: 'დამატება',
-  quick_send_toast: 'მიმღები არჩეულია — გააგრძელეთ გაცვლა',
-
-  // Invite (მეგობრის მოწვევა)
-  invite_title: 'მეგობრის მოწვევა',
-  invite_sub: 'გააზიარეთ ბმული Telegram-ში. მეგობარი გააკეთებს პირველ გაცვლას — თქვენ მიიღებთ გათამაშების ბილეთს.',
-  invite_link_label: 'თქვენი რეფერალური ბმული',
-  invite_share_tg: 'გაზიარება Telegram-ში',
-  invite_copy: 'ბმულის კოპირება',
-  invite_share_text: 'გაცვალე კრიპტო ლეგალურად საქართველოში — AllTrust.me. NBG ლიცენზია, ოფისები თბილისსა და ბათუმში. შემოდი ჩემი ბმულით:',
 
   // PromoModal
   promo_modal_title: 'პრომოკოდი',

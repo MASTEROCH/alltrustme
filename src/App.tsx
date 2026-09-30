@@ -33,28 +33,31 @@ export default function App() {
 
   return (
     <>
-      <div className="app-glow" aria-hidden="true">
-        <span className="orb orb-1" />
-        <span className="orb orb-2" />
-        <span className="orb orb-3" />
+      {/* Сцена: всё приложение, которое уходит вглубь под открытой шторкой (шторки — порталом в body) */}
+      <div className="app-stage">
+        <div className="app-glow" aria-hidden="true">
+          <span className="orb orb-1" />
+          <span className="orb orb-2" />
+          <span className="orb orb-3" />
+        </div>
+        <Routes>
+          {/* Фокус-экран без навбара/чата */}
+          <Route path="/exchange/success" element={<SuccessScreen />} />
+
+          <Route element={<ChromeLayout />}>
+            <Route path="/" element={<HomeScreen />} />
+            <Route path="/exchange" element={<ExchangeScreen />} />
+            <Route path="/offices" element={<OfficesScreen />} />
+            <Route path="/kyc" element={<KycScreen />} />
+            <Route path="/raffle" element={<RaffleScreen />} />
+            <Route path="/events" element={<EventsScreen />} />
+            <Route path="/orders" element={<OrdersScreen />} />
+          </Route>
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
       </div>
       {onboarding && <OnboardingModal onClose={() => setOnboarding(false)} />}
-      <Routes>
-      {/* Фокус-экран без навбара/чата */}
-      <Route path="/exchange/success" element={<SuccessScreen />} />
-
-      <Route element={<ChromeLayout />}>
-        <Route path="/" element={<HomeScreen />} />
-        <Route path="/exchange" element={<ExchangeScreen />} />
-        <Route path="/offices" element={<OfficesScreen />} />
-        <Route path="/kyc" element={<KycScreen />} />
-        <Route path="/raffle" element={<RaffleScreen />} />
-        <Route path="/events" element={<EventsScreen />} />
-        <Route path="/orders" element={<OrdersScreen />} />
-      </Route>
-
-      <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
     </>
   )
 }

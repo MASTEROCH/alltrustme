@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import ModalOverlay from './ModalOverlay'
+import { useRef } from 'react'
+import ModalOverlay, { type SheetHandle } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import { IconRefresh, IconCheckCircle, IconUser, IconShield, IconArrowRight } from '../components/icons'
 import { haptic } from '../utils/telegram'
@@ -16,15 +17,16 @@ export default function ExchangeInfoModal({
 }) {
   const { t, rtl } = useLang()
   const navigate = useNavigate()
+  const sheet = useRef<SheetHandle>(null)
 
   return (
-    <ModalOverlay onClose={onClose} bare>
-      <div className="flex flex-col items-center pt-2 text-center">
-        <span className="icon-chip h-14 w-14 bg-[var(--blue-dim)] text-[var(--blue)]">
+    <ModalOverlay onClose={onClose} bare sheet={sheet}>
+      <div className="sheet-hero">
+        <span className="icon-chip sheet-hero-icon bg-[var(--blue-dim)] text-[var(--blue)]">
           <IconRefresh size={28} />
         </span>
-        <h2 className="mt-4 text-[18px] font-bold">{t('exinfo_title')}</h2>
-        <p className="mt-1.5 max-w-[330px] text-[14px] text-[var(--text2)]">{t('exinfo_sub')}</p>
+        <h2 className="sheet-hero-title">{t('exinfo_title')}</h2>
+        <p className="sheet-hero-sub">{t('exinfo_sub')}</p>
       </div>
 
       {/* Сценарий 1 */}
@@ -76,7 +78,7 @@ export default function ExchangeInfoModal({
       <button
         onClick={() => {
           setFlag(EXINFO_FLAG)
-          onClose()
+          sheet.current?.dismiss()
         }}
         className="btn btn-tertiary is-muted btn-block mt-1"
       >

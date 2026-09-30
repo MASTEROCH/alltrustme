@@ -41,13 +41,13 @@ export default function AddToHomeButton({ compact }: { compact?: boolean }) {
       <button
         onClick={onClick}
         aria-live="polite"
-        className="card press flex flex-col gap-3 p-4 text-left"
-        style={added ? { borderColor: 'rgba(52,210,126,0.4)' } : undefined}
+        className="card press flex flex-col gap-3 p-4 text-start"
+        style={added ? { borderColor: 'rgba(47,210,126,0.4)' } : undefined}
       >
         <span
           className="icon-chip h-10 w-10 border"
           style={{
-            borderColor: added ? 'rgba(52,210,126,0.35)' : 'rgba(61,139,255,0.25)',
+            borderColor: added ? 'rgba(47,210,126,0.35)' : 'rgba(61,139,255,0.25)',
             background: added ? 'var(--green-dim)' : 'var(--blue-dim)',
             color: added ? 'var(--green)' : 'var(--blue)',
           }}
@@ -66,13 +66,13 @@ export default function AddToHomeButton({ compact }: { compact?: boolean }) {
     <button
       onClick={onClick}
       aria-live="polite"
-      className="card press flex w-full items-center gap-3 p-5 text-left"
-      style={added ? { borderColor: 'rgba(52,210,126,0.4)' } : undefined}
+      className="card press flex w-full items-center gap-3 p-5 text-start"
+      style={added ? { borderColor: 'rgba(47,210,126,0.4)' } : undefined}
     >
       <span
         className="icon-chip h-11 w-11 shrink-0 border"
         style={{
-          borderColor: added ? 'rgba(52,210,126,0.35)' : 'rgba(61,139,255,0.25)',
+          borderColor: added ? 'rgba(47,210,126,0.35)' : 'rgba(61,139,255,0.25)',
           background: added ? 'var(--green-dim)' : 'var(--blue-dim)',
           color: added ? 'var(--green)' : 'var(--blue)',
         }}

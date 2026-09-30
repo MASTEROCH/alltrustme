@@ -31,7 +31,7 @@ export default function BonusWeekCelebrationModal({
         </p>
 
         <div
-          className="mt-4 w-full rounded-[var(--r)] border border-[rgba(245,158,11,0.3)] py-4 text-center"
+          className="mt-4 w-full rounded-[var(--r)] border border-[rgba(245,176,66,0.3)] py-4 text-center"
           style={{ background: 'var(--gold-dim)' }}
         >
           <p className="text-[11px] font-bold uppercase tracking-wider text-[var(--text3)]">

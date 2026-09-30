@@ -1,4 +1,5 @@
-import ModalOverlay from './ModalOverlay'
+import { useRef } from 'react'
+import ModalOverlay, { type SheetHandle } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 
 /** Плейсхолдеры фото офиса (нейтральные skeleton-плитки, без эмодзи). */
@@ -19,8 +20,9 @@ function PhotoTile({ ratio }: { ratio: string }) {
 
 export default function PhotosModal({ office, onClose }: { office: string; onClose: () => void }) {
   const { t } = useLang()
+  const sheet = useRef<SheetHandle>(null)
   return (
-    <ModalOverlay title={`${t('photos_office')}: ${office}`} onClose={onClose}>
+    <ModalOverlay title={`${t('photos_office')}: ${office}`} onClose={onClose} sheet={sheet}>
       <PhotoTile ratio="16 / 9" />
       <div className="mt-2 grid grid-cols-2 gap-2">
         <PhotoTile ratio="4 / 3" />
@@ -29,10 +31,7 @@ export default function PhotosModal({ office, onClose }: { office: string; onClo
         <PhotoTile ratio="4 / 3" />
       </div>
       <p className="mt-4 text-center text-[12px] text-[var(--text3)]">{t('photos_placeholder')}</p>
-      <button
-        onClick={onClose}
-        className="mt-4 w-full rounded-[var(--rs)] border border-[var(--border)] bg-[var(--card)] py-3.5 text-[15px] font-semibold transition-transform active:scale-[0.98]"
-      >
+      <button onClick={() => sheet.current?.dismiss()} className="btn btn-secondary btn-block mt-4">
         {t('close')}
       </button>
     </ModalOverlay>

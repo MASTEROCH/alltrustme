@@ -59,7 +59,7 @@ export default function HomeScreen() {
         />
 
         <div className="relative">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(52,210,126,0.35)] bg-[var(--green-dim)] px-3 py-1.5 text-[12px] font-semibold text-[var(--green)]">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-[rgba(47,210,126,0.35)] bg-[var(--green-dim)] px-3 py-1.5 text-[12px] font-semibold text-[var(--green)]">
             <IconShield size={14} className="shrink-0" />
             {t('hero_tag')}
           </span>
@@ -110,7 +110,7 @@ export default function HomeScreen() {
       {/* Баннер розыгрыша — премиум золото (единственное место золота на главной) */}
       <button
         onClick={() => go('/raffle')}
-        className="edge-gold press relative mt-4 w-full overflow-visible rounded-[var(--r)] p-5 text-left"
+        className="edge-gold press relative mt-4 w-full overflow-visible rounded-[var(--r)] p-5 text-start"
         style={{
           background:
             'radial-gradient(135% 100% at 100% 0%, rgba(245,176,66,0.34), transparent 52%), linear-gradient(135deg, #33240b 0%, #241906 55%, #1a1205 100%)',
@@ -173,7 +173,7 @@ export default function HomeScreen() {
           haptic()
           openExternal(CHANNEL)
         }}
-        className="card press mt-4 flex w-full items-center gap-3 p-5 text-left"
+        className="card press mt-4 flex w-full items-center gap-3 p-5 text-start"
       >
         <span className="icon-chip h-11 w-11" style={{ background: '#229ED9', color: '#fff' }}>
           <IconTelegram size={26} />
@@ -192,7 +192,7 @@ export default function HomeScreen() {
             haptic()
             openExternal(DOWNLOAD)
           }}
-          className="card press flex flex-col gap-3 p-4 text-left"
+          className="card press flex flex-col gap-3 p-4 text-start"
         >
           <span className="icon-chip h-10 w-10 border border-[rgba(61,139,255,0.25)] bg-[var(--blue-dim)] text-[var(--blue)]">
             <IconSmartphone size={20} />
@@ -243,7 +243,7 @@ function QuickAction({
   return (
     <button
       onClick={onClick}
-      className={`press relative flex flex-col gap-3.5 rounded-[var(--r)] p-5 text-left ${primary ? 'edge-glow' : 'card'}`}
+      className={`press relative flex flex-col gap-3.5 rounded-[var(--r)] p-5 text-start ${primary ? 'edge-glow' : 'card'}`}
       style={
         primary
           ? {

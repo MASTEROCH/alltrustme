@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import ModalOverlay from './ModalOverlay'
+import ModalOverlay, { useSheetDismiss } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import { useToast } from '../contexts/ToastContext'
 import { IconBolt, IconCheck, IconStopwatch, IconExchange } from '../components/icons'
@@ -17,9 +17,29 @@ interface Props {
 type Stage = 'confirm' | 'loading' | 'success'
 
 export default function ActivateBonusModal({ onActivated, onUseNow, onClose }: Props) {
+  const [stage, setStage] = useState<Stage>('confirm')
+  return (
+    // пока идёт активация — окно не закрыть ничем (раньше «пустой» onClose оставлял невидимый слой)
+    <ModalOverlay onClose={onClose} bare dismissible={stage !== 'loading'}>
+      <Body stage={stage} setStage={setStage} onActivated={onActivated} onUseNow={onUseNow} />
+    </ModalOverlay>
+  )
+}
+
+function Body({
+  stage,
+  setStage,
+  onActivated,
+  onUseNow,
+}: {
+  stage: Stage
+  setStage: (s: Stage) => void
+  onActivated: (code: string) => void
+  onUseNow: () => void
+}) {
   const { t } = useLang()
   const { toast } = useToast()
-  const [stage, setStage] = useState<Stage>('confirm')
+  const dismiss = useSheetDismiss()
   const [copied, setCopied] = useState(false)
 
   const activate = () => {
@@ -38,39 +58,37 @@ export default function ActivateBonusModal({ onActivated, onUseNow, onClose }: P
       setCopied(true)
       toast(t('toast_bonus_copied'))
       setTimeout(() => setCopied(false), 2000)
-    }
+    } else toast(t('toast_copy_failed'), 'error')
   }
 
+  const ok = stage === 'success'
+
   return (
-    <ModalOverlay onClose={stage === 'loading' ? () => {} : onClose} bare>
-      <div className="flex flex-col items-center pt-2 text-center">
+    <>
+      <div key={ok ? 'ok' : 'ask'} className="sheet-hero">
         <span
-          className={`icon-chip h-16 w-16 ${stage === 'success' ? 'pop-in' : ''}`}
+          className={`icon-chip sheet-hero-icon ${ok ? 'is-pop' : ''}`}
           style={
-            stage === 'success'
+            ok
               ? { background: 'var(--green-dim)', color: 'var(--green)' }
               : { background: 'var(--gold-dim)', color: 'var(--gold)' }
           }
         >
-          {stage === 'success' ? <IconCheck size={32} /> : <IconBolt size={30} />}
+          {ok ? <IconCheck size={30} /> : <IconBolt size={28} />}
         </span>
-
-        {stage !== 'success' ? (
-          <>
-            <h2 className="mt-4 text-[18px] font-bold">{t('act_title')}</h2>
-            <p className="mt-1.5 max-w-[320px] text-[14px] text-[var(--text2)]">{t('act_sub')}</p>
-          </>
+        {ok ? (
+          <h2 className="sheet-hero-title text-[var(--green)]">{t('act_success_title')}</h2>
         ) : (
-          <h2 className="mt-4 text-[20px] font-bold text-[var(--green)]">{t('act_success_title')}</h2>
+          <>
+            <h2 className="sheet-hero-title">{t('act_title')}</h2>
+            <p className="sheet-hero-sub">{t('act_sub')}</p>
+          </>
         )}
       </div>
 
-      {stage !== 'success' ? (
+      {!ok ? (
         <>
-          <div
-            className="mt-6 rounded-[var(--r)] border border-[rgba(245,158,11,0.25)] p-5"
-            style={{ background: 'var(--gold-dim)' }}
-          >
+          <div className="mt-6 rounded-[var(--r)] border border-[rgba(245,176,66,0.25)] bg-[var(--gold-dim)] p-5">
             <p className="flex items-center gap-1.5 text-[14px] font-semibold text-[var(--gold)]">
               <IconStopwatch size={15} />
               {t('act_conditions')}
@@ -83,34 +101,24 @@ export default function ActivateBonusModal({ onActivated, onUseNow, onClose }: P
           <p className="mt-4 text-center text-[12px] text-[var(--text3)]">{t('act_note')}</p>
 
           <div className="mt-4 flex gap-2">
-            <button
-              onClick={onClose}
-              disabled={stage === 'loading'}
-              className="press flex-1 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] py-3.5 text-[15px] font-semibold disabled:opacity-50"
-            >
+            <button onClick={dismiss} disabled={stage === 'loading'} className="btn btn-secondary flex-1">
               {t('cancel')}
             </button>
             <button
               onClick={activate}
-              disabled={stage === 'loading'}
-              className="btn-glow-border press flex-1 rounded-[var(--r)] py-4 text-[15px] font-bold text-white"
-              style={{ background: 'linear-gradient(150deg, #ffd27a, var(--gold) 55%, #e08a1e)', color: '#2a1800' }}
+              className={`btn btn-gold btn-glow-border flex-1 ${stage === 'loading' ? 'is-loading' : ''}`}
+              aria-busy={stage === 'loading'}
             >
-              {stage === 'loading' ? '…' : t('act_do')}
+              <span>{t('act_do')}</span>
             </button>
           </div>
         </>
       ) : (
-        <>
+        <div className="sheet-reveal">
           <p className="mt-4 text-center text-[14px] text-[var(--text2)]">{t('act_code_label')}</p>
-          <div className="mt-2 flex items-center gap-2 rounded-[var(--r)] border border-[rgba(245,158,11,0.3)] bg-[var(--card2)] p-4">
-            <span className="flex-1 break-all font-mono text-[15px] font-bold text-[var(--gold)]">
-              {MOCK_CODE}
-            </span>
-            <button
-              onClick={copy}
-              className="press flex items-center gap-1 rounded-full bg-[var(--blue-dim)] px-3 py-1.5 text-[13px] font-semibold text-[var(--blue)]"
-            >
+          <div className="mt-2 flex items-center gap-2 rounded-[var(--r)] border border-[rgba(245,176,66,0.3)] bg-[var(--card2)] p-4">
+            <span className="flex-1 break-all font-mono text-[15px] font-bold text-[var(--gold)]">{MOCK_CODE}</span>
+            <button onClick={copy} className="btn btn-xs btn-soft-blue">
               {copied ? <IconCheck size={14} /> : t('copy')}
             </button>
           </div>
@@ -123,17 +131,16 @@ export default function ActivateBonusModal({ onActivated, onUseNow, onClose }: P
               haptic('medium')
               onUseNow()
             }}
-            className="press mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-3.5 text-[15px] font-bold text-white"
-            style={{ background: 'linear-gradient(135deg, var(--green), #16a34a)' }}
+            className="btn btn-positive btn-block mt-4"
           >
             <IconExchange size={18} />
             {t('act_use_now')}
           </button>
-          <button onClick={onClose} className="mt-2 w-full py-2 text-[14px] text-[var(--text3)]">
+          <button onClick={dismiss} className="btn btn-tertiary is-muted btn-block mt-1">
             {t('close')}
           </button>
-        </>
+        </div>
       )}
-    </ModalOverlay>
+    </>
   )
 }

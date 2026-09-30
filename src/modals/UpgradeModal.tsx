@@ -1,4 +1,5 @@
-import ModalOverlay from './ModalOverlay'
+import { useRef } from 'react'
+import ModalOverlay, { type SheetHandle } from './ModalOverlay'
 import { useLang } from '../contexts/LanguageContext'
 import { IconRocket, IconStories, IconUsers, IconStopwatch, IconBolt } from '../components/icons'
 import { haptic } from '../utils/telegram'
@@ -13,15 +14,16 @@ interface Props {
 export default function UpgradeModal({ refsCurrent, bonusAvailable, onRepost, onClose }: Props) {
   const { t } = useLang()
   const pct = Math.round((refsCurrent / 3) * 100)
+  const sheet = useRef<SheetHandle>(null)
 
   return (
-    <ModalOverlay onClose={onClose} bare>
-      <div className="flex flex-col items-center pt-2 text-center">
-        <span className="icon-chip h-14 w-14 bg-[var(--gold-dim)] text-[var(--gold)]">
+    <ModalOverlay onClose={onClose} bare sheet={sheet}>
+      <div className="sheet-hero">
+        <span className="icon-chip sheet-hero-icon bg-[var(--gold-dim)] text-[var(--gold)]">
           <IconRocket size={28} />
         </span>
-        <h2 className="mt-4 text-[18px] font-bold">{t('upg_title')}</h2>
-        <p className="mt-1 text-[14px] text-[var(--text2)]">{t('upg_sub')}</p>
+        <h2 className="sheet-hero-title">{t('upg_title')}</h2>
+        <p className="sheet-hero-sub">{t('upg_sub')}</p>
       </div>
 
       <div className="mt-6 flex flex-col gap-2.5">
@@ -31,7 +33,7 @@ export default function UpgradeModal({ refsCurrent, bonusAvailable, onRepost, on
             haptic()
             onRepost()
           }}
-          className="press flex items-start gap-3 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-5 text-left"
+          className="card press flex items-start gap-3 p-5 text-start"
         >
           <span className="icon-chip h-10 w-10 bg-[var(--gold-dim)] text-[var(--gold)]">
             <IconStories size={20} />
@@ -47,7 +49,7 @@ export default function UpgradeModal({ refsCurrent, bonusAvailable, onRepost, on
         </button>
 
         {/* 3 реферала */}
-        <div className="rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-5">
+        <div className="card p-5">
           <div className="flex items-start gap-3">
             <span className="icon-chip h-10 w-10 bg-[var(--blue-dim)] text-[var(--blue)]">
               <IconUsers size={20} />
@@ -75,13 +77,7 @@ export default function UpgradeModal({ refsCurrent, bonusAvailable, onRepost, on
         </div>
       </div>
 
-      <button
-        onClick={() => {
-          haptic()
-          onClose()
-        }}
-        className="press mt-4 w-full rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] py-3.5 text-[15px] font-semibold"
-      >
+      <button onClick={() => sheet.current?.dismiss()} className="btn btn-secondary btn-block mt-4">
         {t('close')}
       </button>
     </ModalOverlay>

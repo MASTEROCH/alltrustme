@@ -78,7 +78,8 @@ function OfficeCard({ office, onPhotos }: { office: Office; onPhotos: () => void
 
   const copyAddr = async () => {
     haptic()
-    toast((await copyToClipboard(office.addressFull)) ? t('toast_address_copied') : t('toast_copy_failed'))
+    if (await copyToClipboard(office.addressFull)) toast(t('toast_address_copied'))
+    else toast(t('toast_copy_failed'), 'error')
   }
 
   const tone = office.alwaysOpen
