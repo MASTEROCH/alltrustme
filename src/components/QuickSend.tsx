@@ -45,7 +45,7 @@ export default function QuickSend() {
         {/* Добавить → пригласить друга */}
         <button onClick={openInvite} className="press flex w-[62px] shrink-0 flex-col items-center gap-2">
 
-          <span className="flex h-[58px] w-[58px] items-center justify-center rounded-full border border-dashed border-[rgba(160,188,255,0.3)] bg-[var(--card)] text-[var(--blue)]">
+          <span className="card flex h-[58px] w-[58px] items-center justify-center rounded-full border-dashed text-[var(--blue)]" style={{ borderColor: 'rgba(160,188,255,0.35)' }}>
             <IconPlus size={22} />
           </span>
           <span className="text-[12px] text-[var(--text3)]">{t('quick_send_add')}</span>

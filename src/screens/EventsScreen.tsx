@@ -21,7 +21,7 @@ export default function EventsScreen() {
   return (
     <ScreenShell header={<TitleHeader title={t('ev_header')} />}>
       <p className="section-label mt-4 mb-2">{t('upcoming')}</p>
-      <div className="flex flex-col gap-3">
+      <div className="stagger flex flex-col gap-3">
         {upcoming.map((e) => (
           <EventCard key={e.id} ev={e} />
         ))}
@@ -36,7 +36,7 @@ export default function EventsScreen() {
 
       {/* Подписка на уведомления */}
       {subscribed ? (
-        <div className="mt-6 flex items-center justify-center gap-2 rounded-[var(--r)] border border-[rgba(34,197,94,0.25)] bg-[var(--green-dim)] py-3.5 text-[14px] font-medium text-[var(--green)]">
+        <div className="btn btn-soft-green btn-block mt-6" role="status">
           <IconCheckCircle size={17} />
           {t('notify_subscribed')}
         </div>
@@ -46,7 +46,7 @@ export default function EventsScreen() {
             haptic()
             setNotify(true)
           }}
-          className="press mt-6 flex w-full items-center justify-center gap-2 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] py-3.5 text-[15px] font-semibold text-[var(--blue)]"
+          className="btn btn-secondary is-accent btn-block mt-6"
         >
           <IconBell size={18} />
           {t('notify_cta')}
@@ -81,19 +81,20 @@ function EventCard({ ev }: { ev: EventMock }) {
     <button
       onClick={onClick}
       disabled={ev.past}
-      className="overflow-hidden rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] text-left transition-transform"
-      style={{ ...(ev.past ? {} : { cursor: 'pointer' }) }}
+      className={`card overflow-hidden text-left ${ev.past ? '' : 'press'}`}
     >
       {/* Обложка — стоковое фото (в проде заменим), иконка как фолбэк */}
       <div className="relative flex h-[140px] items-center justify-center overflow-hidden" style={{ background: ev.gradient }}>
         {ev.image ? (
           <>
+            <span className="skel absolute inset-0" aria-hidden="true" />
             <img
               src={ev.image}
               alt=""
               loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover"
+              className="img-fade absolute inset-0 h-full w-full object-cover"
               style={{ filter: ev.past ? 'saturate(0.7) brightness(0.78)' : 'none' }}
+              onLoad={(e) => e.currentTarget.classList.add('is-loaded')}
             />
             {/* затемнение снизу+сверху для читаемости шильдиков */}
             <div

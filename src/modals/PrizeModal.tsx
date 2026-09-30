@@ -109,8 +109,7 @@ export default function PrizeModal({ prize, onClose }: { prize: Prize; onClose: 
           haptic()
           onClose()
         }}
-        className="press mt-4 w-full rounded-[var(--r)] py-3.5 text-[15px] font-bold text-white"
-        style={{ background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 50%, var(--blue2))', color: 'var(--on-accent)' }}
+        className="btn btn-primary btn-block mt-4"
       >
         {t('close')}
       </button>

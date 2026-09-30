@@ -1,6 +1,8 @@
+import { useNavigate } from 'react-router-dom'
 import { useLang } from '../contexts/LanguageContext'
 import { useRates } from '../contexts/RatesContext'
 import { IconWarning } from './icons'
+import { haptic } from '../utils/telegram'
 
 /** Детерминированный мини-спарклайн (path) из строки-пары + направления. */
 function sparkPath(seed: string, up: boolean): string {
@@ -25,16 +27,22 @@ function sparkPath(seed: string, up: boolean): string {
   return d
 }
 
-/** Бесшовная бегущая лента курсов (контент продублирован на 200%). */
+/** Бесшовная бегущая лента курсов. Каждая пара — живая: тап открывает калькулятор
+   с этой парой (раньше лента была «мёртвым» UI). */
 export default function RateTicker() {
   const { t } = useLang()
   const { ticker, live } = useRates()
+  const navigate = useNavigate()
   const doubled = [...ticker, ...ticker]
+
+  const openPair = (pair: string) => {
+    const [from, to] = pair.split('/')
+    haptic()
+    navigate('/exchange', { state: { from, to } })
+  }
 
   return (
     <div className="liquid-glass relative overflow-hidden rounded-[var(--r)] p-4">
-      {/* мягкий shimmer-блик поверх ленты */}
-      <div className="shimmer pointer-events-none absolute inset-0 z-10" />
       {/* mask-фейд: карточки растворяются по краям, а не режутся */}
       <div
         className="overflow-hidden"
@@ -45,12 +53,14 @@ export default function RateTicker() {
       >
         <div className="ticker-scroll flex w-max gap-2">
           {doubled.map((r, i) => (
-            <div
+            <button
               key={i}
-              className="flex shrink-0 flex-col gap-1 rounded-[var(--rs)] bg-[var(--card2)] px-3.5 py-3"
+              onClick={() => openPair(r.pair)}
+              aria-label={`${r.pair} ${r.value}`}
+              tabIndex={i >= ticker.length ? -1 : 0}
+              className="card-inset press flex shrink-0 flex-col items-start gap-1 px-3.5 py-3 text-left"
             >
               <span className="text-[12px] text-[var(--text3)]">{r.pair}</span>
-              {/* мини-спарклайн курса */}
               <svg
                 width="50"
                 height="18"
@@ -60,11 +70,7 @@ export default function RateTicker() {
                 className="my-0.5"
                 style={{ color: r.up ? 'var(--green)' : 'var(--red)' }}
               >
-                <path
-                  d={`${sparkPath(r.pair, r.up)} L50 22 L0 22 Z`}
-                  fill="currentColor"
-                  opacity="0.12"
-                />
+                <path d={`${sparkPath(r.pair, r.up)} L50 22 L0 22 Z`} fill="currentColor" opacity="0.12" />
                 <path
                   d={sparkPath(r.pair, r.up)}
                   stroke="currentColor"
@@ -86,13 +92,13 @@ export default function RateTicker() {
                 </svg>
                 {r.change.replace(/^[+-]/, '')}
               </span>
-            </div>
+            </button>
           ))}
         </div>
       </div>
       {!live && (
-        <p className="relative z-20 mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] font-medium text-[var(--gold)]">
-          <IconWarning size={15} className="shrink-0" />
+        <p className="relative z-20 mt-3 flex items-center justify-center gap-1.5 text-center text-[12px] leading-snug text-[var(--text3)]">
+          <IconWarning size={14} className="shrink-0 text-[var(--gold)]" />
           {t('ticker_warn')}
         </p>
       )}

@@ -5,6 +5,7 @@ import PhotosModal from '../modals/PhotosModal'
 import { useLang } from '../contexts/LanguageContext'
 import { useToast } from '../contexts/ToastContext'
 import { OFFICES } from '../data/offices'
+import { officeStatus } from '../utils/office'
 import {
   IconCopy,
   IconCamera,
@@ -14,24 +15,57 @@ import {
   IconGoogleMaps,
   IconBoltBrand,
   IconYandexGo,
+  IconClock,
+  IconPlane,
 } from '../components/icons'
 import { haptic, openExternal } from '../utils/telegram'
 import { copyToClipboard } from '../utils/format'
 import type { Office } from '../types'
 
 const TG = 'https://t.me/AllTrustMe_Ge'
+const CITY_ORDER = ['city_tbilisi', 'city_batumi', 'city_rustavi']
 
+/** Офисы: группы по городам → компактные карточки (шапка + один ряд действий +
+   строка такси/фото) → ОДИН общий Telegram-CTA внизу вместо четырёх. */
 export default function OfficesScreen() {
   const { t } = useLang()
   const [photosFor, setPhotosFor] = useState<string | null>(null)
 
+  const groups = CITY_ORDER.map((key) => ({ key, items: OFFICES.filter((o) => o.cityKey === key) })).filter(
+    (g) => g.items.length,
+  )
+
   return (
     <ScreenShell header={<TitleHeader title={t('off_header')} />}>
-      <div className="mt-2 flex flex-col gap-3">
-        {OFFICES.map((o) => (
-          <OfficeCard key={o.id} office={o} onPhotos={() => setPhotosFor(o.name)} />
+      <div className="stagger">
+        {groups.map((g) => (
+          <section key={g.key} className="mt-4 first:mt-2">
+            <p className="section-label mb-2 px-1">{t(g.key)}</p>
+            <div className="flex flex-col gap-2.5">
+              {g.items.map((o) => (
+                <OfficeCard key={o.id} office={o} onPhotos={() => setPhotosFor(o.name)} />
+              ))}
+            </div>
+          </section>
         ))}
+
+        {/* Единый канал связи — один раз, крупно */}
+        <button
+          onClick={() => {
+            haptic('medium')
+            openExternal(TG)
+          }}
+          className="btn btn-primary btn-block mt-6 flex-col gap-0.5 py-3.5"
+          style={{ whiteSpace: 'normal' }}
+        >
+          <span className="flex items-center gap-2">
+            <IconTelegram size={20} />
+            {t('offices_tg_cta')}
+          </span>
+          <span className="text-[12px] font-medium text-[rgba(255,255,255,0.8)]">{t('offices_tg_sub')}</span>
+        </button>
       </div>
+
       {photosFor && <PhotosModal office={photosFor} onClose={() => setPhotosFor(null)} />}
     </ScreenShell>
   )
@@ -40,123 +74,100 @@ export default function OfficesScreen() {
 function OfficeCard({ office, onPhotos }: { office: Office; onPhotos: () => void }) {
   const { t } = useLang()
   const { toast } = useToast()
+  const st = officeStatus(office)
 
   const copyAddr = async () => {
     haptic()
-    if (await copyToClipboard(office.addressFull)) toast(t('toast_address_copied'))
+    toast((await copyToClipboard(office.addressFull)) ? t('toast_address_copied') : t('toast_copy_failed'))
   }
 
+  const tone = office.alwaysOpen
+    ? { text: t('always_open'), color: 'var(--blue)', bg: 'var(--blue-dim)' }
+    : st.open
+      ? { text: t('open'), color: 'var(--green)', bg: 'var(--green-dim)' }
+      : { text: t('closed'), color: 'var(--text3)', bg: 'rgba(147,160,194,0.14)' }
+
+  const hours = office.alwaysOpen
+    ? t('always_open_full')
+    : st.open
+      ? `${t('open_until', { t: st.until ?? '' })} · ${office.hours}`
+      : `${t('closed_opens', { t: st.opensAt ?? '' })} · ${office.hours}`
+
+  const go = (url: string) => {
+    haptic()
+    openExternal(url)
+  }
+  // под заголовком города «Тбилиси, Атонели» → «Атонели»
+  const title = office.name.includes(',') ? office.name.split(',').slice(1).join(',').trim() : office.name
+
   return (
-    <div className="overflow-hidden rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)]">
-      {/* Зона 1 — шапка */}
-      <div className="flex items-start justify-between gap-2 border-b border-[var(--border)] p-5">
-        <div className="min-w-0 flex-1">
-          <h3 className="text-[16px] font-bold">{office.name}</h3>
-          <div className="mt-1 flex items-center gap-2">
-            <button
-              onClick={copyAddr}
-              className="flex items-center gap-1 text-[13px] text-[var(--text3)] transition-colors active:text-[var(--blue)]"
-            >
-              {office.address}
-              <IconCopy size={13} />
-            </button>
-            <button
-              onClick={() => {
-                haptic()
-                onPhotos()
-              }}
-              className="flex items-center gap-1 rounded-full bg-[var(--card2)] px-2 py-0.5 text-[12px] text-[var(--text3)] transition-colors active:text-[var(--blue)]"
-            >
-              <IconCamera size={12} />
-              {t('photos_btn')}
-            </button>
-          </div>
+    <article className="card p-4">
+      {/* Шапка: имя + статус-пилюля; адрес; часы */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="flex items-center gap-1.5 text-[16px] font-bold leading-tight tracking-tight">
+            {title}
+            {office.alwaysOpen && <IconPlane size={14} className="shrink-0 text-[var(--blue)]" />}
+          </h3>
+          <button onClick={copyAddr} className="press mt-1 flex items-center gap-1.5 text-[13px] text-[var(--text2)]">
+            <span className="truncate">{office.address}</span>
+            <IconCopy size={13} className="shrink-0 text-[var(--text3)]" />
+          </button>
         </div>
         <span
-          className="shrink-0 rounded-full px-2.5 py-1 text-[12px] font-semibold"
-          style={
-            office.alwaysOpen
-              ? { background: 'var(--blue-dim)', color: 'var(--blue)' }
-              : { background: 'var(--green-dim)', color: 'var(--green)' }
-          }
+          className="flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold"
+          style={{ background: tone.bg, color: tone.color }}
         >
-          {office.alwaysOpen ? t('always_open') : t('open')}
+          <span className="h-1.5 w-1.5 rounded-full" style={{ background: tone.color, boxShadow: st.open ? `0 0 6px ${tone.color}` : 'none' }} />
+          {tone.text}
         </span>
       </div>
+      <p className="mt-2 flex items-center gap-1.5 text-[12px] text-[var(--text3)]">
+        <IconClock size={13} className="shrink-0" />
+        <span className="truncate">{hours}</span>
+      </p>
 
-      {/* Зона 2 — часы */}
-      <div className="border-b border-[var(--border)] px-5 py-3.5 text-[14px]">
-        {office.alwaysOpen ? (
-          <span className="font-semibold text-[var(--blue)]">{t('always_open_full')}</span>
-        ) : (
-          <span className="text-[var(--text2)]">{office.hours}</span>
-        )}
+      {/* Один ряд действий — три равные плитки */}
+      <div className="mt-3.5 grid grid-cols-3 gap-2">
+        <ActionTile icon={<IconGoogleMaps size={22} />} label={t('route')} onClick={() => go(office.mapsUrl)} />
+        <ActionTile icon={<IconPhone size={20} />} label={t('call')} onClick={() => go(`tel:${office.phone}`)} />
+        <ActionTile icon={<IconWhatsApp size={22} />} label={t('whatsapp')} onClick={() => go(`https://wa.me/${office.whatsapp}`)} />
       </div>
 
-      {/* Зона 3 — навигация */}
-      <div className="grid grid-cols-3 gap-2 border-b border-[var(--border)] p-4">
-        <NavBtn icon={<IconGoogleMaps size={26} />} label="Google Maps" onClick={() => openExternal(office.mapsUrl)} />
-        <NavBtn icon={<IconBoltBrand size={26} />} label="Bolt" onClick={() => openExternal(office.boltUrl)} />
-        <NavBtn icon={<IconYandexGo size={26} />} label="Яндекс Go" onClick={() => openExternal(office.yandexUrl)} />
-      </div>
-
-      {/* Зона 4 — контакты */}
-      <div className="flex gap-2 p-4">
-        <div className="flex flex-1 flex-col gap-2">
-          <ContactBtn
-            icon={<IconPhone size={19} />}
-            label={t('call')}
-            onClick={() => openExternal(`tel:${office.phone}`)}
-          />
-          <ContactBtn
-            icon={<IconWhatsApp size={19} />}
-            label={t('whatsapp')}
-            onClick={() => openExternal(`https://wa.me/${office.whatsapp}`)}
-          />
-        </div>
-        <button
+      {/* Второстепенное: такси и фото — тихие чипы одной строкой */}
+      <div className="mt-2.5 flex items-center gap-1.5">
+        <span className="me-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--text3)]">{t('taxi')}</span>
+        <Chip icon={<IconBoltBrand size={14} />} label="Bolt" onClick={() => go(office.boltUrl)} />
+        <Chip icon={<IconYandexGo size={14} />} label="Yandex Go" onClick={() => go(office.yandexUrl)} />
+        <span className="flex-1" />
+        <Chip
+          icon={<IconCamera size={14} />}
+          label={t('photos_btn')}
           onClick={() => {
             haptic()
-            openExternal(TG)
+            onPhotos()
           }}
-          className="press flex flex-[1.4] flex-col items-center justify-center gap-1 rounded-[var(--rs)] py-3 text-white"
-          style={{
-            background: 'linear-gradient(150deg, #5aa0ff, var(--blue) 50%, var(--blue2))',
-            boxShadow: '0 4px 16px var(--blue-glow), inset 0 1px 0 rgba(255,255,255,0.25)',
-          }}
-        >
-          <IconTelegram size={26} />
-          <span className="text-[13px] font-bold">{t('telegram')}</span>
-          <span className="text-[11px] text-[rgba(255,255,255,0.8)]">{t('tg_hint')}</span>
-        </button>
+        />
       </div>
-    </div>
+    </article>
   )
 }
 
-function NavBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+function ActionTile({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
-    <button
-      onClick={() => {
-        haptic()
-        onClick()
-      }}
-      className="flex flex-col items-center gap-1.5 rounded-[var(--rs)] bg-[var(--card2)] py-3.5 transition-all active:scale-95 active:bg-[var(--blue-dim)]"
-    >
-      {icon}
-      <span className="text-[12px] text-[var(--text2)]">{label}</span>
+    <button onClick={onClick} className="card-inset press flex min-h-[64px] flex-col items-center justify-center gap-1.5 px-1 py-2.5">
+      <span className="flex h-6 items-center justify-center text-[var(--text)]">{icon}</span>
+      <span className="max-w-full truncate text-[12px] font-medium text-[var(--text2)]">{label}</span>
     </button>
   )
 }
 
-function ContactBtn({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
+function Chip({ icon, label, onClick }: { icon: React.ReactNode; label: string; onClick: () => void }) {
   return (
     <button
-      onClick={() => {
-        haptic()
-        onClick()
-      }}
-      className="flex items-center justify-center gap-1.5 rounded-[var(--rs)] bg-[var(--card2)] py-3.5 text-[13px] text-[var(--text3)] transition-colors active:text-[var(--text)]"
+      onClick={onClick}
+      className="press flex h-8 items-center gap-1.5 rounded-full border border-[var(--border)] px-2.5 text-[12px] font-medium text-[var(--text2)]"
+      style={{ background: 'rgba(48,66,116,0.28)' }}
     >
       {icon}
       {label}

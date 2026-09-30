@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import ScreenShell from '../components/ScreenShell'
 import TitleHeader from '../components/TitleHeader'
 import CurrencyIcon from '../components/CurrencyIcon'
@@ -8,12 +8,13 @@ import QuickSend from '../components/QuickSend'
 import PromoModal from '../modals/PromoModal'
 import ExchangeInfoModal, { EXINFO_FLAG } from '../modals/ExchangeInfoModal'
 import { useLang } from '../contexts/LanguageContext'
-import { useExchange } from '../hooks/useExchange'
+import { useExchange, type ExchangeInit } from '../hooks/useExchange'
 import { getFlag } from '../utils/persist'
 import { OFFICES } from '../data/offices'
 import { rate } from '../data/rates'
 import { networkFeeUsd, SERVICE_FEE_PCT } from '../data/fees'
 import { parseAmount, formatAmount } from '../utils/format'
+import { officeStatus } from '../utils/office'
 import type { Currency } from '../types'
 import {
   IconChevronDown,
@@ -26,6 +27,7 @@ import {
   IconPlane,
   IconShield,
   IconClock,
+  IconCheck,
 } from '../components/icons'
 import { haptic, hapticSelection } from '../utils/telegram'
 
@@ -39,7 +41,9 @@ function fiatEquiv(amount: string, ticker: string): string {
 export default function ExchangeScreen() {
   const { t, rtl } = useLang()
   const navigate = useNavigate()
-  const ex = useExchange()
+  // стартовая пара может прийти из тапа по тикеру на главной
+  const init = (useLocation().state ?? undefined) as ExchangeInit | undefined
+  const ex = useExchange(init)
 
   const [officeId, setOfficeId] = useState(OFFICES[0].id)
   const [swapSpin, setSwapSpin] = useState(false)
@@ -62,7 +66,6 @@ export default function ExchangeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toIsFiat])
 
-  // выбранная сеть/метод (верхний-правый селектор карточки, как «Arbitrum ⌄»)
   const [fromNet, setFromNet] = useState('')
   const [toNet, setToNet] = useState('')
   useEffect(() => setFromNet(ex.fromCur?.networks[0] ?? ''), [ex.from, ex.fromCur])
@@ -95,10 +98,11 @@ export default function ExchangeScreen() {
   const goExchange = () => {
     if (!canProceed) return
     haptic('medium')
-    // первый раз — показать инфо-модалку перехода; далее сразу
     if (!getFlag(EXINFO_FLAG)) setInfoOpen(true)
     else proceed()
   }
+
+  const methodIdx = Math.max(0, methods.indexOf(method))
 
   return (
     <ScreenShell
@@ -112,7 +116,7 @@ export default function ExchangeScreen() {
                 navigate('/orders')
               }}
               aria-label={t('orders_history_a11y')}
-              className="press flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--text2)]"
+              className="btn-icon"
             >
               <IconClock size={18} />
             </button>
@@ -120,7 +124,7 @@ export default function ExchangeScreen() {
         />
       }
     >
-      {/* FROM / SWAP / TO — swap-карточки, кнопка строго на шве */}
+      {/* FROM / SWAP / TO */}
       <div className="mt-2 flex flex-col">
         <SideCard
           label={t('give')}
@@ -133,18 +137,23 @@ export default function ExchangeScreen() {
           fiat={fiatEquiv(ex.fromAmount, ex.from)}
           focusRing
           error={belowMin}
+          autoFocus
         />
 
-        {/* круглая swap-кнопка внахлёст ровно по центру шва между карточками */}
         <div className="relative z-10 -my-6 flex justify-center">
           <button
             onClick={onSwap}
             aria-label="Swap"
-            className="press flex h-12 w-12 items-center justify-center rounded-full text-white transition-transform duration-300"
+            className="btn btn-primary"
             style={{
-              background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 55%, var(--blue2))',
+              width: 48,
+              height: 48,
+              minHeight: 0,
+              padding: 0,
+              borderRadius: 999,
               boxShadow: '0 6px 20px var(--blue-glow), inset 0 1px 0 rgba(255,255,255,0.4), 0 0 0 5px var(--bg)',
               transform: `rotate(${swapSpin ? 180 : 0}deg)`,
+              transition: 'transform var(--dur-3) var(--spring)',
             }}
           >
             <IconSwapV size={20} />
@@ -175,77 +184,75 @@ export default function ExchangeScreen() {
         show={ex.valid}
       />
       {belowMin ? (
-        <p className="mt-2 flex items-center justify-center gap-1.5 px-2 text-center text-[12px] font-medium text-[var(--red)]">
+        <p className="mt-2 px-2 text-center text-[12px] font-medium text-[var(--red)]" role="alert">
           {t('ex_min_hint', { min: '$' + MIN_USD })}
         </p>
       ) : (
-        <p className="mt-2 px-2 text-center text-[12px] text-[var(--text3)]">{t('to_hint')}</p>
+        <p className="mt-2 px-2 text-center text-[12px] leading-snug text-[var(--text3)]">{t('to_hint')}</p>
       )}
 
       {/* QUICK SEND — недавние получатели */}
       <QuickSend />
 
-      {/* OFFICE */}
+      {/* OFFICE — iOS grouped list с чекмарком и живым статусом */}
       <p className="section-label mt-6 mb-2">{t('office')}</p>
-      <div className="overflow-hidden rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)]">
-        {OFFICES.map((o, i) => {
+      <div className="card list" role="radiogroup" aria-label={t('office')}>
+        {OFFICES.map((o) => {
           const selected = o.id === officeId
+          const st = officeStatus(o)
+          const statusText = o.alwaysOpen
+            ? t('always_open_full')
+            : st.open
+              ? t('open_until', { t: st.until ?? '' })
+              : t('closed_opens', { t: st.opensAt ?? '' })
           return (
             <button
               key={o.id}
+              role="radio"
+              aria-checked={selected}
               onClick={() => {
                 hapticSelection()
                 setOfficeId(o.id)
               }}
-              className="flex w-full items-center gap-3 px-5 py-4 text-left transition-colors"
-              style={{
-                background: selected ? 'var(--blue-dim)' : 'transparent',
-                borderTop: i ? '1px solid var(--border)' : 'none',
-              }}
+              className={`row ${selected ? 'is-selected' : ''}`}
             >
-              <span
-                className="h-2 w-2 shrink-0 rounded-full transition-all"
-                style={{
-                  background: selected ? 'var(--blue)' : 'var(--text3)',
-                  boxShadow: selected ? '0 0 8px var(--blue)' : 'none',
-                }}
-              />
               <span className="flex flex-1 flex-col">
-                <span className="flex items-center gap-1.5 text-[15px] font-medium">
+                <span className="flex items-center gap-1.5 text-[15px] font-semibold">
                   {o.name}
-                  {o.alwaysOpen && <IconPlane size={14} />}
+                  {o.alwaysOpen && <IconPlane size={14} className="text-[var(--blue)]" />}
                 </span>
                 <span
                   className="text-[12px]"
-                  style={{ color: o.alwaysOpen ? 'var(--blue)' : 'var(--green)' }}
+                  style={{ color: o.alwaysOpen ? 'var(--blue)' : st.open ? 'var(--green)' : 'var(--text3)' }}
                 >
-                  {o.alwaysOpen ? t('always_open') : t('open_status')}
+                  {statusText}
                 </span>
+              </span>
+              <span className={`check ${selected ? 'is-on' : ''}`}>
+                <IconCheck size={13} strokeWidth={3} />
               </span>
             </button>
           )
         })}
       </div>
 
-      {/* METHOD */}
+      {/* METHOD — сегмент-контрол со скользящим ползунком */}
       <p className="section-label mt-6 mb-2">{t('method')}</p>
-      <div className="flex gap-2">
+      <div className="seg" style={{ '--n': methods.length } as React.CSSProperties} role="tablist">
+        <span className="seg-thumb" style={{ '--i': methodIdx } as React.CSSProperties} aria-hidden="true" />
         {methods.map((m) => {
           const active = m === method
           const Icon = m === 'cash' ? IconCash : m === 'card' ? IconCard : IconWallet
           return (
             <button
               key={m}
+              role="tab"
+              aria-selected={active}
               onClick={() => {
                 hapticSelection()
                 setMethod(m)
               }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-[var(--rs)] border-[1.5px] py-3 text-[14px] font-medium transition-all active:scale-[0.97]"
-              style={{
-                background: active ? 'var(--blue-dim)' : 'var(--card)',
-                borderColor: active ? 'var(--blue)' : 'var(--border)',
-                color: active ? 'var(--blue)' : 'var(--text)',
-              }}
+              className={`seg-item ${active ? 'is-on' : ''}`}
             >
               <Icon size={17} />
               {t(m)}
@@ -260,7 +267,7 @@ export default function ExchangeScreen() {
           haptic()
           setPromoOpen(true)
         }}
-        className="press mt-6 flex w-full items-center gap-3 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] px-5 py-3.5 text-left"
+        className="card press mt-6 flex w-full items-center gap-3 px-5 py-3.5 text-left"
       >
         <span className="text-[var(--blue)]">
           <IconTicket size={20} />
@@ -268,25 +275,19 @@ export default function ExchangeScreen() {
         <span className="flex-1 text-[14px]">
           {t('promo_label')}: <span className="font-mono font-semibold text-[var(--blue)]">{promo}</span>
         </span>
-        <span className="text-[13px] text-[var(--text3)]">{t('change')}</span>
+        <span className="text-[13px] font-medium text-[var(--blue)]">{t('change')}</span>
       </button>
 
-      {/* CTA */}
-      <button
-        onClick={goExchange}
-        className="relative overflow-hidden shine mt-6 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold text-white transition-all active:scale-[0.98]"
-        style={{
-          background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 50%, var(--blue2))', color: 'var(--on-accent)',
-          boxShadow: '0 8px 28px var(--blue-glow)',
-          opacity: canProceed ? 1 : 0.45,
-        }}
-      >
-        <span style={{ transform: rtl ? 'scaleX(-1)' : 'none' }}>
+      {/* CTA — disabled по-настоящему, причина — в подписи */}
+      <button onClick={goExchange} disabled={!canProceed} className="btn btn-primary btn-block mt-6">
+        <span style={{ transform: rtl ? 'scaleX(-1)' : 'none', display: 'inline-flex' }}>
           <IconArrowRight size={19} />
         </span>
         {t('go_ex')}
       </button>
-      <p className="mt-2.5 px-2 text-center text-[12px] text-[var(--text3)]">{t('go_ex_disclaimer')}</p>
+      <p className="mt-2.5 px-2 text-center text-[12px] leading-snug text-[var(--text3)]">
+        {canProceed ? t('go_ex_disclaimer') : ex.valid ? t('ex_min_hint', { min: '$' + MIN_USD }) : t('enter_amount')}
+      </p>
 
       {modalSide && (
         <CurrencyModal
@@ -295,9 +296,7 @@ export default function ExchangeScreen() {
           onClose={() => setModalSide(null)}
         />
       )}
-      {promoOpen && (
-        <PromoModal initial={promo} onApply={setPromo} onClose={() => setPromoOpen(false)} />
-      )}
+      {promoOpen && <PromoModal initial={promo} onApply={setPromo} onClose={() => setPromoOpen(false)} />}
       {infoOpen && (
         <ExchangeInfoModal
           onProceed={() => {
@@ -311,8 +310,7 @@ export default function ExchangeScreen() {
   )
 }
 
-/** Прозрачная сводка: курс, сервисная комиссия (0%), сетевой сбор и итог.
-   Появляется плавно, когда сумма валидна. */
+/** Прозрачная сводка: курс, сервисная комиссия (0%), сетевой сбор и итог. */
 function FeeSummary({
   from,
   to,
@@ -339,7 +337,6 @@ function FeeSummary({
     )
   }
 
-  // сетевой сбор берём только при получении крипты, конвертируем USD → валюту «to»
   const feeUsd = toIsCrypto ? networkFeeUsd(toNet) : 0
   const feeInTo = feeUsd * rate('USD', to)
   const received = Math.max(0, parseAmount(toAmount) - feeInTo)
@@ -352,7 +349,7 @@ function FeeSummary({
   )
 
   return (
-    <div className="mt-3 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] px-5 py-3">
+    <div className="card rise mt-3 px-5 py-3">
       <div className="mb-1 flex items-center justify-between">
         <span className="section-label">{t('fee_details')}</span>
         <span className="flex items-center gap-1 text-[12px] font-medium text-[var(--green)]">
@@ -400,6 +397,7 @@ function SideCard({
   focusRing,
   amountColor,
   error,
+  autoFocus,
 }: {
   label: string
   cur: Currency | undefined
@@ -412,25 +410,30 @@ function SideCard({
   focusRing?: boolean
   amountColor?: string
   error?: boolean
+  autoFocus?: boolean
 }) {
   const multiNet = (cur?.networks.length ?? 0) > 1
+  // крупная сумма ужимается, когда цифр много (32 → 22px), чтобы не ломать строку
+  const len = amount.replace(/\s/g, '').length
+  const fontSize = len > 12 ? 20 : len > 9 ? 24 : len > 7 ? 28 : 32
   return (
     <div
-      className={`rounded-[var(--r)] bg-[var(--card)] p-5 transition-colors ${
+      className={`card p-5 transition-colors ${
         error
           ? 'border-[1.5px] border-[var(--red)]'
           : focusRing
-            ? 'border-[1.5px] border-[var(--border)] focus-within:border-[var(--blue)]'
-            : 'border border-[var(--border)]'
+            ? 'border-[1.5px] focus-within:border-[var(--blue)]'
+            : ''
       }`}
+      style={error ? { boxShadow: '0 0 0 4px rgba(255,90,106,0.12)' } : undefined}
     >
-      {/* верх: лейбл + селектор сети */}
       <div className="flex items-center justify-between">
         <span className="section-label">{label}</span>
         {net && (
           <button
             onClick={onCycleNet}
-            className="flex items-center gap-1 rounded-full bg-[var(--card2)] px-2.5 py-1 text-[12px] font-medium text-[var(--text2)] transition-transform active:scale-95"
+            className="card-inset press flex items-center gap-1 rounded-full px-2.5 py-1 text-[12px] font-medium text-[var(--text2)]"
+            aria-label={net}
           >
             {net}
             {multiNet && <IconChevronDown size={13} className="text-[var(--text3)]" />}
@@ -438,14 +441,13 @@ function SideCard({
         )}
       </div>
 
-      {/* середина: монета-пилюля слева + крупная сумма справа */}
       <div className="mt-3.5 flex items-center justify-between gap-3">
         <button
           onClick={() => {
             haptic()
             onPickCur()
           }}
-          className="press flex shrink-0 items-center gap-2 rounded-full bg-[var(--card2)] py-2 pl-2 pr-3"
+          className="card-inset press flex shrink-0 items-center gap-2 rounded-full py-2 pl-2 pr-3"
         >
           {cur && <CurrencyIcon currency={cur} size={28} />}
           <span className="font-mono text-[17px] font-bold">{cur?.ticker}</span>
@@ -453,15 +455,22 @@ function SideCard({
         </button>
         <input
           inputMode="decimal"
+          autoComplete="off"
+          enterKeyHint="done"
           value={amount}
           onChange={(e) => onAmount(e.target.value)}
           placeholder="0"
-          className="w-0 flex-1 bg-transparent text-right font-mono text-[30px] font-bold outline-none placeholder:text-[var(--text3)]"
-          style={amountColor ? { color: amountColor } : undefined}
+          autoFocus={autoFocus}
+          aria-label={label}
+          className="w-0 flex-1 bg-transparent text-right font-mono font-bold outline-none placeholder:text-[var(--text3)]"
+          style={{
+            fontSize,
+            transition: 'font-size var(--dur-2) ease',
+            ...(amountColor ? { color: amountColor } : null),
+          }}
         />
       </div>
 
-      {/* низ: фиат-эквивалент справа */}
       <div className="mt-2 flex justify-end">
         <span className="font-mono text-[12px] text-[var(--text3)]">≈ {fiat}</span>
       </div>

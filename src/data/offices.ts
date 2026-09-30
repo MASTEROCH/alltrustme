@@ -7,6 +7,7 @@ const WA = '995511131952'
 export const OFFICES: Office[] = [
   {
     id: 'tbilisi-atoneli',
+    cityKey: 'city_tbilisi',
     name: 'Тбилиси, Атонели',
     address: '18 Atoneli St.',
     addressFull: '18 Atoneli St., Тбилиси',
@@ -20,6 +21,7 @@ export const OFFICES: Office[] = [
   },
   {
     id: 'batumi',
+    cityKey: 'city_batumi',
     name: 'Батуми',
     address: 'Gorgiladze St. 111',
     addressFull: 'Zurab Gorgiladze St. 111, Батуми',
@@ -33,6 +35,7 @@ export const OFFICES: Office[] = [
   },
   {
     id: 'tbilisi-airport',
+    cityKey: 'city_tbilisi',
     name: 'Аэропорт Тбилиси',
     address: 'Departure hall',
     addressFull: 'Tbilisi International Airport, Departure hall',
@@ -46,6 +49,7 @@ export const OFFICES: Office[] = [
   },
   {
     id: 'rustavi',
+    cityKey: 'city_rustavi',
     name: 'Рустави',
     address: 'Рустави',
     addressFull: 'Rustavi',

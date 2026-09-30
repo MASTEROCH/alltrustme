@@ -17,17 +17,27 @@ const TABS: Tab[] = [
   { to: '/events', key: 'n_ev', Icon: IconConfetti },
 ]
 
+/** Плавающий liquid-glass таб-бар. Активный сегмент — ОДНА стеклянная «капля»,
+   которая скользит между вкладками (а не перерисовывается на месте). */
 export default function BottomNav() {
   const { pathname } = useLocation()
   const { t } = useLang()
   const isActive = (to: string) => (to === '/' ? pathname === '/' : pathname.startsWith(to))
+  // -1 на push-экранах (KYC, заявки): ни одна вкладка не активна, капля прячется
+  const activeIdx = TABS.findIndex((tab) => isActive(tab.to))
 
   return (
     <nav
       className="pointer-events-none fixed inset-x-0 bottom-0 z-[150] mx-auto w-full max-w-[480px] px-3"
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 10px)' }}
+      aria-label="Main"
     >
-      <div className="liquid-glass pointer-events-auto flex items-stretch gap-0.5 rounded-[26px] p-1.5">
+      <div className="liquid-glass pointer-events-auto relative flex items-stretch gap-0.5 rounded-[26px] p-1.5">
+        <span
+          className="nav-thumb"
+          style={{ '--i': Math.max(0, activeIdx), opacity: activeIdx < 0 ? 0 : 1, transition: 'transform var(--dur-3) var(--ease), opacity var(--dur-2) ease' } as React.CSSProperties}
+          aria-hidden="true"
+        />
         {TABS.map(({ to, key, Icon }) => {
           const active = isActive(to)
           return (
@@ -35,38 +45,25 @@ export default function BottomNav() {
               key={to}
               to={to}
               onClick={() => hapticSelection()}
-              className="relative flex flex-1 flex-col items-center gap-1 rounded-[19px] py-2 transition-transform duration-200 active:scale-90"
+              aria-current={active ? 'page' : undefined}
+              className="press relative flex flex-1 flex-col items-center gap-1 rounded-[19px] py-2"
             >
-              {/* активная стеклянная подложка-сегмент */}
-              {active && (
-                <span
-                  className="absolute inset-0 rounded-[19px]"
-                  style={{
-                    background:
-                      'linear-gradient(180deg, rgba(61,139,255,0.18), rgba(61,139,255,0.05))',
-                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.12)',
-                  }}
-                />
-              )}
-              {/* заблёкшая подсветка-бэклайт за иконкой */}
-              {active && (
-                <span
-                  className="pointer-events-none absolute top-1.5 h-9 w-9 rounded-full"
-                  style={{ background: 'var(--blue)', filter: 'blur(13px)', opacity: 0.5 }}
-                />
-              )}
               <span
-                className="relative transition-transform duration-200"
+                className="relative"
                 style={{
                   color: active ? 'var(--blue)' : 'var(--text3)',
                   transform: active ? 'scale(1.12)' : 'scale(1)',
+                  transition: 'transform var(--dur-3) var(--spring), color var(--dur-2) ease',
                 }}
               >
                 <Icon size={22} />
               </span>
               <span
                 className="relative text-[11px] font-medium leading-none"
-                style={{ color: active ? 'var(--blue)' : 'var(--text3)' }}
+                style={{
+                  color: active ? 'var(--blue)' : 'var(--text3)',
+                  transition: 'color var(--dur-2) ease',
+                }}
               >
                 {t(key)}
               </span>

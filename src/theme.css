@@ -65,6 +65,13 @@
   /* — Шрифты — */
   --font-ui: 'Geologica', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', monospace;
+
+  /* — Движение (канон ROCH: out-expo + spring, три длительности) — */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-1: 150ms;
+  --dur-2: 240ms;
+  --dur-3: 320ms;
 }
 
 /* Адаптивные радиусы + паддинг скролла */
@@ -96,10 +103,17 @@ html {
   text-size-adjust: 100%;
 }
 
+html {
+  overscroll-behavior: none;
+}
 body {
   margin: 0 auto;
   max-width: 480px;
-  min-height: var(--tg-viewport-stable-height, 100vh);
+  /* app-shell: высота = вьюпорт, страница НЕ скроллит (скроллит .scroll внутри экрана) —
+     иначе iOS тянет всю страницу резинкой и показывает чёрный фон за приложением */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-ui);
@@ -108,6 +122,7 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums;
 }
 
 /* ВАЖНО: сброс в @layer base — иначе беслойные правила перебивают
@@ -149,10 +164,18 @@ body {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  min-height: var(--tg-viewport-stable-height, 100vh);
+  /* Экран = рамка приложения фиксированной высоты; скроллит ТОЛЬКО .scroll.
+     Раньше min-height давал скролл body → reveal/scroll-top/overscroll не работали. */
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
   /* Apple-переход при входе на экран (смена вкладки = remount → проигрывается) */
-  animation: pageEnter 0.46s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pageEnter 0.42s var(--ease) both;
+}
+/* Внутри Telegram высота = стабильный вьюпорт мини-аппа (клавиатура/шторка) */
+html.tma body,
+html.tma .screen {
+  height: var(--tg-viewport-stable-height, 100dvh);
 }
 @keyframes pageEnter {
   from {
@@ -289,7 +312,7 @@ body {
   border-radius: 50%;
   background: radial-gradient(circle, var(--blue), transparent 68%);
   filter: blur(15px);
-  animation: fabPulse 2.9s ease-in-out infinite;
+  opacity: 0.55;
   pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -384,7 +407,9 @@ body {
 
 .scroll {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   /* нижний запас под плавающий навбар + scrim (150px) + safe-area —
      чтобы последний элемент не уезжал под размытую подложку навбара */
@@ -406,8 +431,7 @@ body {
 
 /* Sticky-шапка с градиентным «утоплением» контента + safe-area сверху */
 .chrome-header {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 100;
   padding-top: env(safe-area-inset-top, 0px);
   background: linear-gradient(to bottom, var(--bg) 78%, transparent);
@@ -515,7 +539,7 @@ body {
 
 /* Spring-нажатие (упругий отклик) — добавляет «жизнь» интерактиву */
 .press {
-  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--dur-1) var(--spring);
 }
 .press:active {
   transform: scale(0.96);
@@ -736,7 +760,7 @@ body {
   }
 }
 .modal-slide-up {
-  animation: slideUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: slideUp 0.42s var(--ease) both;
 }
 /* затемнение-фон модалки плавно проявляется */
 @keyframes backdropIn {
@@ -829,7 +853,12 @@ body {
   }
 }
 .ticker-scroll {
-  animation: tickerSlide 20s linear infinite;
+  animation: tickerSlide 24s linear infinite;
+  will-change: transform;
+}
+.ticker-scroll:hover,
+.ticker-scroll:active {
+  animation-play-state: paused;
 }
 
 @keyframes popIn {
@@ -900,6 +929,444 @@ body {
   animation: toastIn 0.25s ease both;
 }
 
+
+
+/* ============================================================
+   СИСТЕМА КНОПОК — единственный источник CTA (HARD RULE ROCH:
+   primary / secondary / tertiary / danger / disabled, без inline-стилей)
+   ============================================================ */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 52px;
+  padding: 0.9rem 1.25rem;
+  border-radius: var(--r);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  transition:
+    transform var(--dur-1) var(--spring),
+    opacity var(--dur-2) ease,
+    box-shadow var(--dur-2) ease,
+    background-color var(--dur-2) ease,
+    color var(--dur-2) ease;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.btn > svg {
+  flex-shrink: 0;
+}
+.btn-sm {
+  min-height: 42px;
+  padding: 0.6rem 1rem;
+  border-radius: var(--rs);
+  font-size: 14px;
+}
+.btn-xs {
+  min-height: 34px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.btn-block {
+  display: flex;
+  width: 100%;
+}
+
+/* Primary — электрик-синий, светлая вершина, специфический блик сверху, glow */
+.btn-primary {
+  color: var(--on-accent);
+  background:
+    radial-gradient(120% 90% at 85% 0%, rgba(255, 255, 255, 0.28), transparent 45%),
+    linear-gradient(150deg, var(--accent-hi) 0%, var(--blue) 50%, var(--blue2) 100%);
+  box-shadow:
+    0 10px 30px -6px var(--blue-glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.18);
+}
+/* Secondary — стекло-карточка с hairline, текст основной */
+.btn-secondary {
+  color: var(--text);
+  background: linear-gradient(180deg, rgba(40, 56, 100, 0.62), rgba(24, 34, 66, 0.6));
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.btn-secondary.is-accent {
+  color: var(--blue);
+}
+/* Tertiary — только текст, синий; для «не показывать снова», «изменить» */
+.btn-tertiary {
+  color: var(--blue);
+  background: transparent;
+  min-height: 44px;
+  font-weight: 600;
+}
+.btn-tertiary.is-muted {
+  color: var(--text3);
+}
+/* Positive — зелёный, тёмный текст (белый на зелёном нечитаем) */
+.btn-positive {
+  color: #04200f;
+  background:
+    radial-gradient(120% 90% at 85% 0%, rgba(255, 255, 255, 0.28), transparent 45%),
+    linear-gradient(150deg, #5ae59a, var(--green) 55%, #1fa85f);
+  box-shadow:
+    0 10px 30px -8px rgba(47, 210, 126, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+/* Gold — ТОЛЬКО розыгрыш/награды, тёмный текст */
+.btn-gold {
+  color: #2a1800;
+  background:
+    radial-gradient(120% 90% at 85% 0%, rgba(255, 255, 255, 0.3), transparent 45%),
+    linear-gradient(150deg, #ffd27a, var(--gold) 55%, #e08a1e);
+  box-shadow:
+    0 10px 30px -8px rgba(245, 176, 66, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+/* Danger */
+.btn-danger {
+  color: #fff;
+  background: linear-gradient(150deg, #ff7a86, var(--red) 55%, #d93a4a);
+  box-shadow: 0 10px 30px -8px rgba(255, 90, 106, 0.45);
+}
+/* Soft-варианты (тонированная подложка + цветной текст) — для вторичных действий в цвете */
+.btn-soft-blue {
+  color: var(--blue);
+  background: var(--blue-dim);
+  border: 1px solid rgba(61, 139, 255, 0.28);
+}
+.btn-soft-green {
+  color: var(--green);
+  background: var(--green-dim);
+  border: 1px solid rgba(47, 210, 126, 0.28);
+}
+.btn-soft-gold {
+  color: var(--gold);
+  background: var(--gold-dim);
+  border: 1px solid rgba(245, 176, 66, 0.28);
+}
+/* Иконка-кнопка (круг 36–40) */
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  color: var(--text2);
+  background: rgba(40, 56, 100, 0.55);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform var(--dur-1) var(--spring), background-color var(--dur-2) ease;
+}
+.btn-icon:active {
+  transform: scale(0.9);
+}
+
+/* ============================================================
+   МАТЕРИАЛ КАРТОЧЕК — fake-glass (гибрид-канон ROCH: real blur только на chrome)
+   ============================================================ */
+.card {
+  position: relative;
+  border-radius: var(--r);
+  background: linear-gradient(160deg, rgba(34, 48, 88, 0.72) 0%, rgba(20, 29, 58, 0.66) 100%);
+  border: 1px solid var(--border);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 8px 24px -14px rgba(0, 0, 0, 0.7);
+}
+/* вложенная поверхность (чипы, поля, ряды внутри карточки) */
+.card-inset {
+  border-radius: var(--rs);
+  background: rgba(48, 66, 116, 0.5);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+/* карточка-подсветка выбранного состояния */
+.card.is-selected {
+  border-color: rgba(61, 139, 255, 0.55);
+  background: linear-gradient(160deg, rgba(61, 139, 255, 0.22), rgba(31, 111, 229, 0.12));
+}
+
+/* Группированный список (iOS inset grouped): карточка + ряды с разделителями */
+.list {
+  overflow: hidden;
+}
+.list > .row + .row {
+  border-top: 1px solid var(--border);
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.95rem 1.25rem;
+  text-align: start;
+  transition: background-color var(--dur-2) ease;
+}
+button.row:active {
+  background: rgba(61, 139, 255, 0.1);
+}
+.row.is-selected {
+  background: var(--blue-dim);
+}
+
+/* Чекмарк выбора (iOS): пустой круг → заполненный синий с галочкой */
+.check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1.5px solid rgba(160, 188, 255, 0.35);
+  color: transparent;
+  flex-shrink: 0;
+  transition:
+    background-color var(--dur-2) ease,
+    border-color var(--dur-2) ease,
+    color var(--dur-2) ease,
+    transform var(--dur-2) var(--spring);
+}
+.check.is-on {
+  background: var(--blue);
+  border-color: var(--blue);
+  color: #fff;
+  box-shadow: 0 0 0 4px var(--blue-dim);
+  transform: scale(1.04);
+}
+
+/* ============================================================
+   СЕГМЕНТ-КОНТРОЛ (iOS): скользящий стеклянный ползунок под активным пунктом
+   ============================================================ */
+.seg {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 4px;
+  border-radius: calc(var(--rs) + 4px);
+  background: rgba(14, 20, 42, 0.7);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  isolation: isolate;
+}
+.seg-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / var(--n, 2));
+  border-radius: var(--rs);
+  background: linear-gradient(180deg, rgba(61, 139, 255, 0.34), rgba(61, 139, 255, 0.16));
+  border: 1px solid rgba(61, 139, 255, 0.45);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 6px 16px -8px var(--blue-glow);
+  transform: translateX(calc(var(--i, 0) * 100%));
+  transition: transform var(--dur-3) var(--ease);
+  z-index: 0;
+  pointer-events: none;
+}
+[dir='rtl'] .seg-thumb {
+  left: auto;
+  right: 4px;
+  transform: translateX(calc(var(--i, 0) * -100%));
+}
+.seg-item {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 42px;
+  padding: 0 0.6rem;
+  border-radius: var(--rs);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text2);
+  transition: color var(--dur-2) ease, transform var(--dur-1) var(--spring);
+}
+.seg-item:active {
+  transform: scale(0.97);
+}
+.seg-item.is-on {
+  color: var(--text);
+}
+
+/* ============================================================
+   НИЖНИЙ ТАБ-БАР — скользящая стеклянная «капля» под активной вкладкой
+   ============================================================ */
+.nav-thumb {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 6px;
+  width: calc((100% - 12px - 4 * 2px) / 5);
+  border-radius: 19px;
+  background: linear-gradient(180deg, rgba(61, 139, 255, 0.2), rgba(61, 139, 255, 0.05));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transform: translateX(calc(var(--i, 0) * (100% + 2px)));
+  transition: transform var(--dur-3) var(--ease);
+  pointer-events: none;
+}
+[dir='rtl'] .nav-thumb {
+  left: auto;
+  right: 6px;
+  transform: translateX(calc(var(--i, 0) * (-100% - 2px)));
+}
+.nav-thumb::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 6px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--blue);
+  filter: blur(13px);
+  opacity: 0.5;
+  transform: translateX(-50%);
+}
+
+/* Кнопка «назад» в шапке внутренних экранов */
+.back-btn {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+[dir='rtl'] .back-btn svg {
+  transform: scaleX(-1);
+}
+
+/* ============================================================
+   ЗЕРНО — стеклу нужно что преломлять: SVG-grain .035 поверх орбов
+   ============================================================ */
+.app-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.035;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+  pointer-events: none;
+}
+
+/* ============================================================
+   CINEMATIC (только пики): рисующаяся галочка + конфетти
+   ============================================================ */
+.check-draw {
+  stroke-dasharray: 60;
+  stroke-dashoffset: 60;
+  animation: checkDraw 0.7s var(--ease) 0.25s forwards;
+}
+@keyframes checkDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.ring-pop {
+  animation: ringPop 0.7s var(--spring) both;
+}
+@keyframes ringPop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+.halo {
+  position: absolute;
+  inset: -18px;
+  border-radius: 999px;
+  border: 2px solid rgba(47, 210, 126, 0.5);
+  animation: haloOut 1.1s var(--ease) 0.35s both;
+  pointer-events: none;
+}
+@keyframes haloOut {
+  from {
+    transform: scale(0.6);
+    opacity: 0.9;
+  }
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+.confetti {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.confetti i {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 7px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--c, var(--blue));
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: confettiFly 1.35s cubic-bezier(0.2, 0.8, 0.3, 1) var(--d, 0s) both;
+}
+@keyframes confettiFly {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) rotate(0deg) scale(0.6);
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--x, 0px)), calc(-50% + var(--y, -120px))) rotate(var(--rot, 540deg)) scale(1);
+  }
+}
+
+/* Изображения: мягкое проявление после загрузки (без пустой чёрной дыры) */
+.img-fade {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.img-fade.is-loaded {
+  opacity: 1;
+}
+.skel {
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0.04) 30%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.04) 70%);
+  background-size: 200% 100%;
+  animation: shimmerMove 1.8s linear infinite;
+}
+
+/* Многострочный клэмп вместо «…» в одну строку (2 строки читаются, обрезка — нет) */
+.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
 /* Уважение к prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -908,5 +1375,8 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .img-fade {
+    opacity: 1;
   }
 }

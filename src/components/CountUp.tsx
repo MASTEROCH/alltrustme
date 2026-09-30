@@ -36,8 +36,11 @@ export default function CountUp({
       else setVal(end)
     }
     raf.current = requestAnimationFrame(tick)
+    // rAF мёрзнет в фоновой вкладке/headless — страховка доводит до конца (playbook §5 п.18)
+    const guard = window.setTimeout(() => setVal(end), duration + 80)
     return () => {
       if (raf.current) cancelAnimationFrame(raf.current)
+      window.clearTimeout(guard)
     }
   }, [end, duration, reduce])
 

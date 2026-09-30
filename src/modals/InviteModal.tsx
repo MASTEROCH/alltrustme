@@ -6,7 +6,7 @@ import { IconUsers, IconTelegram, IconCopy, IconCheck } from '../components/icon
 import { haptic, openExternal } from '../utils/telegram'
 import { copyToClipboard } from '../utils/format'
 
-const REF_LINK = 'https://t.me/AllTrustMe_Ge?start=ref_APPHUB'
+import { REF_LINK } from '../utils/share'
 
 /** Приглашение друга: реферальная ссылка + шеринг в Telegram. Бэкенд подключим позже. */
 export default function InviteModal({ onClose }: { onClose: () => void }) {
@@ -27,7 +27,7 @@ export default function InviteModal({ onClose }: { onClose: () => void }) {
       setCopied(true)
       toast(t('toast_link_copied'))
       setTimeout(() => setCopied(false), 2000)
-    }
+    } else toast(t('toast_copy_failed'))
   }
 
   return (
@@ -52,7 +52,7 @@ export default function InviteModal({ onClose }: { onClose: () => void }) {
       <p className="section-label mb-2 mt-5">{t('invite_link_label')}</p>
       <button
         onClick={copy}
-        className="press flex w-full items-center gap-2 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card2)] p-3.5 text-left"
+        className="card press flex w-full items-center gap-2 p-3.5 text-left"
       >
         <span className="min-w-0 flex-1 truncate font-mono text-[13px] text-[var(--blue)]">{REF_LINK}</span>
         <span className="flex shrink-0 items-center gap-1 rounded-full bg-[var(--blue-dim)] px-2.5 py-1.5 text-[12px] font-semibold text-[var(--blue)]">
@@ -63,18 +63,14 @@ export default function InviteModal({ onClose }: { onClose: () => void }) {
       {/* CTA */}
       <button
         onClick={shareTg}
-        className="press mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold text-white"
-        style={{
-          background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 55%, var(--blue2))',
-          boxShadow: '0 8px 28px var(--blue-glow)',
-        }}
+        className="btn btn-primary btn-block mt-4"
       >
         <IconTelegram size={20} />
         {t('invite_share_tg')}
       </button>
       <button
         onClick={copy}
-        className="press mt-2.5 flex w-full items-center justify-center gap-2 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] py-3.5 text-[14px] font-semibold text-[var(--text2)]"
+        className="btn btn-secondary btn-block mt-2.5"
       >
         <IconCopy size={17} />
         {t('invite_copy')}

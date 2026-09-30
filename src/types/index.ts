@@ -17,6 +17,8 @@ export interface Currency {
 export interface Office {
   id: string
   name: string
+  /** ключ города для группировки: city_tbilisi | city_batumi | city_rustavi */
+  cityKey: string
   /** короткий адрес для показа */
   address: string
   /** полный адрес для копирования */

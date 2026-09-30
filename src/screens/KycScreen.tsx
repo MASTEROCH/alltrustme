@@ -37,11 +37,11 @@ export default function KycScreen() {
   ]
 
   return (
-    <ScreenShell header={<TitleHeader title={t('kyc_header')} />}>
+    <ScreenShell header={<TitleHeader title={t('kyc_header')} back />}>
       {/* Hero */}
       <section
-        className="mt-2 flex flex-col items-center rounded-[var(--r)] border border-[rgba(34,197,94,0.2)] px-5 py-6 text-center"
-        style={{ background: 'linear-gradient(135deg, #0d2240, #0a1830)' }}
+        className="card mt-2 flex flex-col items-center px-5 py-6 text-center"
+        style={{ borderColor: 'rgba(47,210,126,0.25)' }}
       >
         <span className="text-[var(--green)]">
           <IconShield size={48} />
@@ -78,13 +78,9 @@ export default function KycScreen() {
 
       {/* После KYC */}
       <p className="section-label mt-6 mb-2">{t('kyc_after')}</p>
-      <div className="overflow-hidden rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)]">
-        {after.map(([title, sub], i) => (
-          <div
-            key={title}
-            className="flex items-start gap-3 px-5 py-4"
-            style={{ borderTop: i ? '1px solid var(--border)' : 'none' }}
-          >
+      <div className="card list">
+        {after.map(([title, sub]) => (
+          <div key={title} className="row items-start">
             <span className="mt-0.5 shrink-0 text-[var(--green)]">
               <IconCheckCircle size={20} />
             </span>
@@ -102,8 +98,7 @@ export default function KycScreen() {
           haptic('medium')
           openExternal(KYC_URL)
         }}
-        className="relative overflow-hidden shine mt-6 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold text-white transition-transform active:scale-[0.98]"
-        style={{ background: 'linear-gradient(150deg, #4fe08e, var(--green) 55%, #1fa85f)', boxShadow: '0 8px 28px var(--green-dim)', color: '#04200f' }}
+        className="btn btn-positive btn-block mt-6"
       >
         <IconShield size={19} />
         {t('kyc_online_cta')}
@@ -113,8 +108,7 @@ export default function KycScreen() {
           haptic()
           navigate('/exchange')
         }}
-        className="relative overflow-hidden shine mt-2.5 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold text-white transition-transform active:scale-[0.98]"
-        style={{ background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 50%, var(--blue2))', boxShadow: '0 8px 28px var(--blue-glow)', color: 'var(--on-accent)' }}
+        className="btn btn-secondary is-accent btn-block mt-2.5"
       >
         <IconExchange size={19} />
         {t('kyc_go_ex')}
@@ -126,13 +120,9 @@ export default function KycScreen() {
 function NumberedList({ items, question }: { items: string[][]; question?: boolean }) {
   const { t } = useLang()
   return (
-    <div className="overflow-hidden rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)]">
+    <div className="card list">
       {items.map(([title, sub], i) => (
-        <div
-          key={title}
-          className="flex items-start gap-3 px-5 py-4"
-          style={{ borderTop: i ? '1px solid var(--border)' : 'none' }}
-        >
+        <div key={title} className="row items-start">
           <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-[8px] border border-[rgba(61,139,255,0.3)] bg-[var(--blue-dim)] text-[var(--blue)]">
             {question ? <IconQuestion size={15} /> : <span className="font-mono text-[14px] font-bold">{i + 1}</span>}
           </span>

@@ -38,11 +38,8 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
     return (
       <button
         onClick={() => pick(c.ticker)}
-        className="flex w-full items-center gap-3 rounded-[var(--rs)] border px-3 py-3.5 text-left transition-colors active:scale-[0.99]"
-        style={{
-          background: active ? 'var(--blue-dim)' : 'var(--card)',
-          borderColor: active ? 'var(--blue)' : 'var(--border)',
-        }}
+        className={`card press flex w-full items-center gap-3 px-3 py-3.5 text-left ${active ? 'is-selected' : ''}`}
+        style={{ borderRadius: 'var(--rs)' }}
       >
         <CurrencyIcon currency={c} size={30} />
         <span className="flex flex-1 flex-col">
@@ -50,7 +47,7 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
           <span className="text-[12px] text-[var(--text3)]">{c.name}</span>
         </span>
         {c.networks.length > 1 && (
-          <span className="text-[11px] text-[var(--text3)]">{c.networks.length} сетей</span>
+          <span className="text-[11px] text-[var(--text3)]">{t('networks_n', { n: c.networks.length })}</span>
         )}
         {active && (
           <span className="text-[var(--blue)]">
@@ -63,7 +60,7 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
 
   return (
     <ModalOverlay title={t('sel_cur')} onClose={onClose}>
-      <div className="mb-3 flex items-center gap-2 rounded-[var(--rs)] border border-[var(--border)] bg-[var(--card)] px-3">
+      <div className="card mb-3 flex items-center gap-2 px-3" style={{ borderRadius: 'var(--rs)' }}>
         <span className="text-[var(--text3)]">
           <IconSearch size={18} />
         </span>
@@ -71,7 +68,7 @@ export default function CurrencyModal({ selected, onSelect, onClose }: Props) {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder={t('cur_search')}
-          className="w-full bg-transparent py-3 text-[15px] outline-none placeholder:text-[var(--text3)]"
+          className="w-full bg-transparent py-3 text-[16px] outline-none placeholder:text-[var(--text3)]"
           autoFocus
         />
       </div>

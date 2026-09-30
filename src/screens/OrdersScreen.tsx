@@ -31,9 +31,9 @@ export default function OrdersScreen() {
 
   if (orders.length === 0) {
     return (
-      <ScreenShell header={<TitleHeader title={t('orders_header')} />}>
+      <ScreenShell header={<TitleHeader title={t('orders_header')} back />}>
         <div className="flex flex-col items-center px-6 pt-24 text-center">
-          <span className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--card)] text-[var(--text3)]">
+          <span className="card flex h-20 w-20 items-center justify-center rounded-full text-[var(--text3)]">
             <IconReceipt size={38} />
           </span>
           <h2 className="mt-5 text-[18px] font-bold">{t('orders_empty_title')}</h2>
@@ -45,11 +45,7 @@ export default function OrdersScreen() {
               haptic()
               navigate('/exchange')
             }}
-            className="press mt-6 flex items-center gap-2 rounded-[var(--r)] px-6 py-3.5 text-[15px] font-bold text-[var(--on-accent)]"
-            style={{
-              background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 50%, var(--blue2))',
-              boxShadow: '0 8px 28px var(--blue-glow)',
-            }}
+            className="btn btn-primary mt-6 px-6"
           >
             <IconExchange size={18} />
             {t('orders_empty_cta')}
@@ -60,14 +56,14 @@ export default function OrdersScreen() {
   }
 
   return (
-    <ScreenShell header={<TitleHeader title={t('orders_header')} />}>
+    <ScreenShell header={<TitleHeader title={t('orders_header')} back />}>
       <p className="section-label mb-3 mt-4">{t('orders_title')}</p>
-      <div className="flex flex-col gap-3">
+      <div className="stagger flex flex-col gap-3">
         {orders.map((o) => {
           const st = STATUS[o.status]
           const active = o.status === 'pending' || o.status === 'confirmed'
           return (
-            <div key={o.id} className="rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-5">
+            <div key={o.id} className="card p-5">
               {/* шапка: id/дата + статус */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -112,7 +108,7 @@ export default function OrdersScreen() {
                       haptic()
                       openExternal(CHAT)
                     }}
-                    className="press flex flex-1 items-center justify-center gap-2 rounded-[var(--rs)] border border-[rgba(61,139,255,0.3)] bg-[var(--blue-dim)] py-2.5 text-[14px] font-semibold text-[var(--blue)]"
+                    className="btn btn-sm btn-soft-blue flex-1"
                   >
                     <IconTelegram size={16} />
                     {t('ord_open_chat')}
@@ -123,7 +119,7 @@ export default function OrdersScreen() {
                       haptic()
                       navigate('/exchange')
                     }}
-                    className="press flex flex-1 items-center justify-center gap-2 rounded-[var(--rs)] border border-[var(--border)] bg-[var(--card2)] py-2.5 text-[14px] font-semibold text-[var(--text)]"
+                    className="btn btn-sm btn-secondary flex-1"
                   >
                     <IconExchange size={16} />
                     {t('ord_repeat')}

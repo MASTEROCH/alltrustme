@@ -68,12 +68,7 @@ export default function OnboardingModal({ onClose }: { onClose: () => void }) {
         {/* CTA */}
         <button
           onClick={next}
-          className="press shine relative mt-4 flex w-full items-center justify-center gap-2 overflow-hidden rounded-[var(--r)] py-4 text-[16px] font-bold text-[var(--on-accent)]"
-          style={{
-            background:
-              'radial-gradient(120% 95% at 82% 0%, rgba(255,255,255,0.34), transparent 48%), linear-gradient(150deg, var(--accent-hi) 0%, var(--blue) 48%, var(--blue2) 100%)',
-            boxShadow: '0 10px 30px var(--blue-glow), inset 0 1px 0 rgba(255,255,255,0.45)',
-          }}
+          className="btn btn-primary btn-block mt-4"
         >
           {last && (
             <span style={{ transform: rtl ? 'scaleX(-1)' : 'none' }}>

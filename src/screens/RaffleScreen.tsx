@@ -27,8 +27,9 @@ import {
   IconShareArrow,
   IconCheck,
 } from '../components/icons'
-import { haptic } from '../utils/telegram'
+import { haptic, openExternal, isTma } from '../utils/telegram'
 import { copyToClipboard } from '../utils/format'
+import { shareStory, shareLink, copyLink, tgShareUrl } from '../utils/share'
 import { getFlag } from '../utils/persist'
 
 // мок-данные (бэкенд подключим позже)
@@ -73,7 +74,26 @@ export default function RaffleScreen() {
       setPromoCopied(true)
       toast(t('toast_promo_copied'))
       setTimeout(() => setPromoCopied(false), 2000)
-    }
+    } else toast(t('toast_copy_failed'))
+  }
+
+  // Честный шеринг: слово об успехе — только ПОСЛЕ результата
+  const onStory = async () => {
+    haptic('medium')
+    const media = `${window.location.origin}${import.meta.env.BASE_URL}alltrust-logo.svg`
+    const r = await shareStory(t('share_text'), media)
+    toast(r === 'shared' ? t('toast_shared') : r === 'copied' ? t('toast_text_copied') : t('toast_copy_failed'))
+  }
+  const onInvite = async () => {
+    haptic()
+    if (isTma()) return openExternal(tgShareUrl(t('share_text')))
+    toast((await copyLink()) ? t('toast_link_copied') : t('toast_copy_failed'))
+  }
+  const onNative = async () => {
+    haptic()
+    const r = await shareLink(t('share_text'))
+    if (r === 'shared') toast(t('toast_shared'))
+    else if (r === 'copied') toast(t('toast_link_copied'))
   }
 
   const chevron = (
@@ -86,7 +106,6 @@ export default function RaffleScreen() {
     <ScreenShell header={<TitleHeader title={t('raffle_full_header')} />}>
       {/* Лента спонсоров — единый стиль с тикером курсов (liquid-glass) */}
       <div className="liquid-glass relative mt-2 overflow-hidden rounded-[var(--r)] p-3">
-        <div className="shimmer pointer-events-none absolute inset-0 z-10" />
         <div
           className="overflow-hidden"
           style={{
@@ -98,7 +117,7 @@ export default function RaffleScreen() {
             {[...SPONSORS, ...SPONSORS].map((s, i) => (
               <div
                 key={i}
-                className="flex min-w-[230px] items-center gap-2.5 rounded-[var(--rs)] bg-[var(--card2)] px-3 py-3"
+                className="card-inset flex min-w-[230px] items-center gap-2.5 px-3 py-3"
               >
                 <span className="icon-chip h-10 w-10 bg-[var(--gold-dim)] text-[var(--gold)]">
                   <Glyph name={s.icon} size={22} />
@@ -149,7 +168,7 @@ export default function RaffleScreen() {
           </div>
           <div className="h-2.5 overflow-hidden rounded-full bg-[rgba(0,0,0,0.4)]">
             <div
-              className="pulse-bar h-full rounded-full"
+              className="h-full rounded-full"
               style={{
                 width: `${seasonPct}%`,
                 background: 'linear-gradient(90deg, #ffd27a, var(--gold) 50%, #f97316)',
@@ -171,14 +190,14 @@ export default function RaffleScreen() {
               haptic()
               setPrize(p)
             }}
-            className="press flex items-center gap-3 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-4 text-left"
+            className="card press flex items-center gap-3 p-4 text-left"
           >
             <span className="icon-chip h-[42px] w-[42px]" style={{ background: TONE_DIM[p.tone], color: TONE_COLOR[p.tone] }}>
               <Glyph name={p.icon} size={22} />
             </span>
             <div className="min-w-0 flex-1">
-              <h4 className="truncate text-[15px] font-semibold">{t(p.titleKey)}</h4>
-              <p className="truncate text-[13px] text-[var(--text3)]">{t(p.descKey)}</p>
+              <h4 className="clamp-2 text-[15px] font-semibold leading-snug">{t(p.titleKey)}</h4>
+              <p className="clamp-2 text-[13px] leading-snug text-[var(--text3)]">{t(p.descKey)}</p>
             </div>
             <span className="rounded-full bg-[var(--card2)] px-2 py-1 font-mono text-[12px] text-[var(--text2)]">
               × {p.winners}
@@ -196,14 +215,14 @@ export default function RaffleScreen() {
             haptic()
             setWelcome(true)
           }}
-          className="press flex h-6 w-6 items-center justify-center rounded-full border border-[var(--border)] bg-[var(--card)] text-[var(--text3)]"
+          className="btn-icon" style={{ width: 28, height: 28 }}
         >
           <IconQuestion size={14} />
         </button>
       </div>
       <button
         onClick={scrollToShare}
-        className="press w-full rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-5 text-left"
+        className="card press w-full p-5 text-left"
       >
         <p className="text-[13px] leading-snug text-[var(--text2)]">{t('ref_rule')}</p>
 
@@ -262,8 +281,7 @@ export default function RaffleScreen() {
               haptic('medium')
               setActivate(true)
             }}
-            className="btn-glow-border press mt-2.5 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold"
-            style={{ background: 'linear-gradient(150deg, #ffd27a, var(--gold) 55%, #e08a1e)', color: '#2a1800', boxShadow: '0 8px 26px rgba(245,176,66,0.4)' }}
+            className="btn btn-gold btn-block btn-glow-border mt-2.5"
           >
             <IconBolt size={19} />
             {t('activate_bonus_btn')}
@@ -273,7 +291,7 @@ export default function RaffleScreen() {
 
       {/* Как получить билеты */}
       <p className="section-label mb-2 mt-6">{t('how_get_tickets')}</p>
-      <div className="overflow-hidden rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)]">
+      <div className="card list">
         <EarnRow Icon={IconExchange} title={t('ticket_ex_title')} sub={t('ticket_ex_sub')} onClick={scrollToShare} />
         <div className="h-px bg-[var(--border)]" />
         <EarnRow Icon={IconUsers} title={t('ticket_ref_title')} sub={t('ticket_ref_sub')} onClick={scrollToShare} />
@@ -281,7 +299,7 @@ export default function RaffleScreen() {
 
       {/* Промокоды */}
       <p className="section-label mb-2 mt-6">{t('promo_section')}</p>
-      <div className="rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-5">
+      <div className="card p-5">
         <p className="flex items-center gap-1.5 text-[14px] font-semibold">
           <IconTicket size={16} className="text-[var(--blue)]" />
           {t('base_promo')}
@@ -290,7 +308,7 @@ export default function RaffleScreen() {
           <span className="flex-1 font-mono text-[16px] font-bold text-[var(--blue)]">APPHUB</span>
           <button
             onClick={copyPromo}
-            className="press flex items-center gap-1 rounded-full bg-[var(--blue-dim)] px-3 py-1.5 text-[13px] font-semibold text-[var(--blue)]"
+            className="btn btn-xs btn-soft-blue"
           >
             {promoCopied ? <IconCheck size={14} /> : t('copy')}
           </button>
@@ -334,7 +352,7 @@ export default function RaffleScreen() {
       {/* Блок шеринга */}
       <div
         ref={shareRef}
-        className={`mt-6 rounded-[var(--r)] border bg-[var(--card)] p-5 ${shareGlow ? 'glow-border' : 'border-[var(--border)]'}`}
+        className={`card mt-6 p-5 ${shareGlow ? 'glow-border' : ''}`}
       >
         <p className="flex items-center gap-1.5 text-[14px] font-semibold">
           <IconGift size={16} className="text-[var(--gold)]" />
@@ -346,30 +364,21 @@ export default function RaffleScreen() {
             sub={t('share_stories_s')}
             icon={<IconStories size={20} />}
             style={{ background: 'linear-gradient(135deg, #833ab4, #fd1d1d 60%, #fcb045)', color: '#fff' }}
-            onClick={() => {
-              haptic()
-              toast(t('toast_text_copied'))
-            }}
+            onClick={onStory}
           />
           <ShareBtn
             title={t('share_invite_t')}
             sub={t('share_invite_s')}
             icon={<IconLink size={20} />}
             style={{ background: 'var(--blue-dim)', color: 'var(--blue)' }}
-            onClick={() => {
-              haptic()
-              toast(t('toast_link_copied'))
-            }}
+            onClick={onInvite}
           />
           <ShareBtn
             title={t('share_native_t')}
             sub={t('share_native_s')}
             icon={<IconShareArrow size={20} />}
-            style={{ background: 'var(--card2)', color: 'var(--text2)' }}
-            onClick={() => {
-              haptic()
-              toast(t('toast_link_copied'))
-            }}
+            style={{ background: 'rgba(48,66,116,0.5)', color: 'var(--text2)' }}
+            onClick={onNative}
           />
         </div>
       </div>
@@ -380,8 +389,7 @@ export default function RaffleScreen() {
           haptic('medium')
           navigate('/exchange')
         }}
-        className="relative overflow-hidden shine press mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold text-white"
-        style={{ background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 50%, var(--blue2))', boxShadow: '0 8px 28px var(--blue-glow)', color: 'var(--on-accent)' }}
+        className="btn btn-primary btn-block mt-4"
       >
         <IconExchange size={19} />
         {t('raffle_bottom_cta')}
@@ -431,7 +439,7 @@ function EarnRow({
 }) {
   const { t } = useLang()
   return (
-    <button onClick={onClick} className="flex w-full items-center gap-3 px-5 py-4 text-left active:bg-[var(--card2)]">
+    <button onClick={onClick} className="row">
       <span className="icon-chip h-10 w-10 bg-[var(--gold-dim)] text-[var(--gold)]">
         <Icon size={20} />
       </span>
@@ -469,7 +477,7 @@ function ShareBtn({
     >
       {icon}
       <span className="text-[13px] font-bold leading-none">{title}</span>
-      <span className="text-[9px] leading-none opacity-80">{sub}</span>
+      <span className="text-[10px] leading-none opacity-80">{sub}</span>
     </button>
   )
 }

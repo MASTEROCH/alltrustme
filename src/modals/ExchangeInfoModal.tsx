@@ -28,7 +28,7 @@ export default function ExchangeInfoModal({
       </div>
 
       {/* Сценарий 1 */}
-      <div className="mt-4 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-5">
+      <div className="card mt-4 p-5">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--green-dim)] px-2.5 py-1 text-[12px] font-semibold text-[var(--green)]">
           <IconCheckCircle size={13} />
           {t('exinfo_registered')}
@@ -38,7 +38,7 @@ export default function ExchangeInfoModal({
       </div>
 
       {/* Сценарий 2 */}
-      <div className="mt-4 rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)] p-5">
+      <div className="card mt-4 p-5">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--gold-dim)] px-2.5 py-1 text-[12px] font-semibold text-[var(--gold)]">
           <IconUser size={13} />
           {t('exinfo_newuser')}
@@ -54,8 +54,7 @@ export default function ExchangeInfoModal({
           onClose()
           navigate('/kyc')
         }}
-        className="press mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--r)] border border-[rgba(34,197,94,0.4)] py-3.5 text-[15px] font-semibold text-[var(--green)]"
-        style={{ background: 'rgba(34,197,94,0.08)' }}
+        className="btn btn-soft-green btn-block mt-4"
       >
         <IconShield size={17} />
         {t('exinfo_kyc_btn')}
@@ -67,8 +66,7 @@ export default function ExchangeInfoModal({
           setFlag(EXINFO_FLAG)
           onProceed()
         }}
-        className="relative overflow-hidden shine press mt-2.5 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold text-white"
-        style={{ background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 50%, var(--blue2))', boxShadow: '0 8px 28px var(--blue-glow)', color: 'var(--on-accent)' }}
+        className="btn btn-primary btn-block mt-2.5"
       >
         <span style={{ transform: rtl ? 'scaleX(-1)' : undefined }}>
           <IconArrowRight size={18} />
@@ -80,7 +78,7 @@ export default function ExchangeInfoModal({
           setFlag(EXINFO_FLAG)
           onClose()
         }}
-        className="mt-2 w-full py-2 text-[14px] text-[var(--text3)]"
+        className="btn btn-tertiary is-muted btn-block mt-1"
       >
         {t('exinfo_dontshow')}
       </button>

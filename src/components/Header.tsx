@@ -34,7 +34,9 @@ export default function Header() {
               haptic()
               setLangOpen(true)
             }}
-            className="press rounded-[9px] border border-[var(--border)] bg-[var(--card)] px-2 py-1.5 text-[12px] font-bold tracking-wider text-[var(--text2)]"
+            className="card press px-2.5 py-1.5 text-[12px] font-bold tracking-wider text-[var(--text2)]"
+            style={{ borderRadius: 10 }}
+            aria-label={t('lang_title')}
           >
             {LANG_LABELS[lang]}
           </button>

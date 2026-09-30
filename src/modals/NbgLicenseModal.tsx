@@ -22,20 +22,16 @@ export default function NbgLicenseModal({ onClose }: { onClose: () => void }) {
 
   return (
     <ModalOverlay title={t('nbg_title')} onClose={onClose}>
-      <div className="mb-4 flex items-center gap-3 rounded-[var(--r)] border border-[rgba(34,197,94,0.2)] bg-[var(--green-dim)] p-5">
+      <div className="card mb-4 flex items-center gap-3 p-5" style={{ borderColor: 'rgba(47,210,126,0.25)' }}>
         <span className="flex h-11 w-11 items-center justify-center rounded-[var(--rs)] bg-[rgba(34,197,94,0.15)] text-[var(--green)]">
           <IconBank size={24} />
         </span>
         <p className="text-[13px] leading-snug text-[var(--text2)]">{t('nbg_disclaimer')}</p>
       </div>
 
-      <div className="overflow-hidden rounded-[var(--r)] border border-[var(--border)] bg-[var(--card)]">
+      <div className="card list">
         {rows.map(([label, value], i) => (
-          <div
-            key={i}
-            className="flex items-center justify-between px-5 py-4 text-[14px]"
-            style={{ borderTop: i ? '1px solid var(--border)' : 'none' }}
-          >
+          <div key={i} className="row justify-between text-[14px]">
             <span className="text-[var(--text3)]">{label}</span>
             <span className="font-medium">{value}</span>
           </div>
@@ -47,7 +43,7 @@ export default function NbgLicenseModal({ onClose }: { onClose: () => void }) {
           haptic()
           openExternal('https://nbg.gov.ge/')
         }}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--rs)] border border-[var(--border)] bg-[var(--card)] py-3.5 text-[14px] font-semibold text-[var(--blue)] transition-transform active:scale-[0.98]"
+        className="btn btn-secondary is-accent btn-block mt-4"
       >
         <IconExternal size={17} />
         {t('nbg_check_btn')}

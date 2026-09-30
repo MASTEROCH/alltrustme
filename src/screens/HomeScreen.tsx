@@ -41,12 +41,10 @@ export default function HomeScreen() {
     <ScreenShell header={<Header />}>
       {/* Hero — живой mesh/aurora фон + Web3 иридесцентная кромка */}
       <section className="iridescent relative mt-2 overflow-hidden rounded-[var(--r)] border border-[var(--border)] px-5 py-6">
-        {/* база (синий → глубокий фиолетовый) */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{ background: 'linear-gradient(150deg, #12325f 0%, #0c1430 52%, #1a1247 100%)' }}
         />
-        {/* дрейфующие aurora-пятна (синее + фиолетовое — комплементарная глубина) */}
         <div
           className="aurora-blob pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(61,139,255,0.5), transparent 65%)' }}
@@ -55,7 +53,6 @@ export default function HomeScreen() {
           className="aurora-blob pointer-events-none absolute -bottom-24 -left-12 h-56 w-56 rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(139,109,255,0.45), transparent 65%)', animationDelay: '-8s' }}
         />
-        {/* верхний specular-блик */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-px"
           style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent)' }}
@@ -66,11 +63,12 @@ export default function HomeScreen() {
             <IconShield size={14} className="shrink-0" />
             {t('hero_tag')}
           </span>
+          {/* Hero-типографика: clamp-масштаб, 800, tight tracking */}
           <h1
-            className="mt-4 text-[27px] font-extrabold leading-[1.12] tracking-[-0.02em]"
+            className="mt-4 text-[clamp(26px,7.4vw,32px)] font-extrabold leading-[1.08] tracking-[-0.03em]"
             dangerouslySetInnerHTML={{ __html: t('hero_title') }}
           />
-          <p className="mt-3 text-[14px] leading-relaxed text-[var(--text2)]">{t('hero_sub')}</p>
+          <p className="mt-3 max-w-[32ch] text-[14px] leading-relaxed text-[var(--text2)]">{t('hero_sub')}</p>
 
           <div className="mt-6 flex items-stretch gap-3">
             <Stat value={<CountUp end={150} suffix="K+" />} label={t('clients')} />
@@ -82,7 +80,7 @@ export default function HomeScreen() {
                 haptic()
                 openExternal('https://www.google.com/search?q=AllTrust.me')
               }}
-              className="flex flex-col items-start transition-opacity active:opacity-70"
+              className="press flex flex-col items-start"
             >
               <span className="flex items-center gap-1 font-mono text-[17px] font-bold">
                 4.9
@@ -96,38 +94,20 @@ export default function HomeScreen() {
         </div>
       </section>
 
-      {/* Тикер */}
+      {/* Тикер — каждая пара открывает калькулятор */}
       <div className="mt-4">
         <RateTicker />
       </div>
 
       {/* Quick actions 2×2 */}
       <div className="mt-4 grid grid-cols-2 gap-2.5">
-        <QuickAction
-          primary
-          Icon={IconExchange}
-          title={t('exchange')}
-          sub={t('ex_sub')}
-          onClick={() => go('/exchange')}
-        />
+        <QuickAction primary Icon={IconExchange} title={t('exchange')} sub={t('ex_sub')} onClick={() => go('/exchange')} />
         <QuickAction accent="cyan" Icon={IconPin} title={t('offices')} sub={t('off_sub')} onClick={() => go('/offices')} />
-        <QuickAction
-          accent="blue"
-          Icon={IconShield}
-          title={t('kyc_action')}
-          sub={t('kyc_sub')}
-          onClick={() => go('/kyc')}
-        />
-        <QuickAction
-          accent="gold"
-          Icon={IconConfetti}
-          title={t('events')}
-          sub={t('ev_sub')}
-          onClick={() => go('/events')}
-        />
+        <QuickAction accent="blue" Icon={IconShield} title={t('kyc_action')} sub={t('kyc_sub')} onClick={() => go('/kyc')} />
+        <QuickAction accent="gold" Icon={IconConfetti} title={t('events')} sub={t('ev_sub')} onClick={() => go('/events')} />
       </div>
 
-      {/* Баннер розыгрыша — премиум золото */}
+      {/* Баннер розыгрыша — премиум золото (единственное место золота на главной) */}
       <button
         onClick={() => go('/raffle')}
         className="edge-gold press relative mt-4 w-full overflow-visible rounded-[var(--r)] p-5 text-left"
@@ -136,7 +116,6 @@ export default function HomeScreen() {
             'radial-gradient(135% 100% at 100% 0%, rgba(245,176,66,0.34), transparent 52%), linear-gradient(135deg, #33240b 0%, #241906 55%, #1a1205 100%)',
         }}
       >
-        {/* бегущий блик-shine (в рамке скругления) */}
         <span className="shine pointer-events-none absolute inset-0 overflow-hidden rounded-[var(--r)]" />
 
         <div className="relative flex items-center justify-between">
@@ -153,7 +132,7 @@ export default function HomeScreen() {
         </div>
 
         <h3 className="relative mt-3 text-[20px] font-extrabold leading-tight tracking-tight text-[#fff4e0]">
-          Розыгрыш{' '}
+          {t('raffle_header')}{' '}
           <span
             className="font-mono num-glow"
             style={{
@@ -170,7 +149,7 @@ export default function HomeScreen() {
 
         <div className="relative mt-4 h-2 overflow-hidden rounded-full bg-[rgba(0,0,0,0.35)]">
           <div
-            className="pulse-bar h-full rounded-full"
+            className="h-full rounded-full"
             style={{
               width: '67%',
               background: 'linear-gradient(90deg, #ffd27a, var(--gold) 50%, #f97316)',
@@ -188,43 +167,43 @@ export default function HomeScreen() {
       {/* Отзывы клиентов */}
       <Reviews />
 
-      {/* Telegram-канал */}
-      <LinkBanner
-        gradient="linear-gradient(135deg, #0d2440, #103258)"
-        border="rgba(61,139,255,0.25)"
-        title={t('channel_title')}
-        sub={t('channel_sub')}
-        chevron={Chevron}
+      {/* Telegram-канал — главный внешний канал, отдельной строкой */}
+      <button
         onClick={() => {
           haptic()
           openExternal(CHANNEL)
         }}
-        leading={
-          <span className="flex h-11 w-11 items-center justify-center rounded-[var(--rs)]" style={{ background: '#229ED9' }}>
-            <IconTelegram size={26} />
-          </span>
-        }
-      />
+        className="card press mt-4 flex w-full items-center gap-3 p-5 text-left"
+      >
+        <span className="icon-chip h-11 w-11" style={{ background: '#229ED9', color: '#fff' }}>
+          <IconTelegram size={26} />
+        </span>
+        <span className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-[15px] font-semibold">{t('channel_title')}</span>
+          <span className="text-[12px] text-[var(--text3)]">{t('channel_sub')}</span>
+        </span>
+        <span className="text-[var(--text3)]">{Chevron}</span>
+      </button>
 
-      {/* Скачать приложение */}
-      <LinkBanner
-        gradient="linear-gradient(135deg, #0d1f3c, #0c1830)"
-        border="rgba(61,139,255,0.25)"
-        title={t('download_app_title')}
-        sub={t('download_app_sub')}
-        chevron={Chevron}
-        onClick={() => {
-          haptic()
-          openExternal(DOWNLOAD)
-        }}
-        leading={
-          <span className="flex h-11 w-11 items-center justify-center rounded-[var(--rs)] border border-[rgba(61,139,255,0.25)] bg-[var(--blue-dim)] text-[var(--blue)]">
-            <IconSmartphone size={24} />
+      {/* Вторичные ссылки — компактно, одной строкой вместо трёх одинаковых баннеров */}
+      <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+        <button
+          onClick={() => {
+            haptic()
+            openExternal(DOWNLOAD)
+          }}
+          className="card press flex flex-col gap-3 p-4 text-left"
+        >
+          <span className="icon-chip h-10 w-10 border border-[rgba(61,139,255,0.25)] bg-[var(--blue-dim)] text-[var(--blue)]">
+            <IconSmartphone size={20} />
           </span>
-        }
-      />
-
-      <AddToHomeButton />
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="clamp-2 text-[14px] font-semibold leading-snug">{t('download_app_title')}</span>
+            <span className="text-[11.5px] leading-snug text-[var(--text3)]">{t('download_app_sub')}</span>
+          </span>
+        </button>
+        <AddToHomeButton compact />
+      </div>
     </ScreenShell>
   )
 }
@@ -264,9 +243,7 @@ function QuickAction({
   return (
     <button
       onClick={onClick}
-      className={`press relative flex flex-col gap-3.5 rounded-[var(--r)] p-5 text-left ${
-        primary ? 'edge-glow' : 'card-depth'
-      }`}
+      className={`press relative flex flex-col gap-3.5 rounded-[var(--r)] p-5 text-left ${primary ? 'edge-glow' : 'card'}`}
       style={
         primary
           ? {
@@ -288,52 +265,13 @@ function QuickAction({
         <Icon size={23} />
       </span>
       <span className="flex flex-col gap-1">
-        <span
-          className="text-[16px] font-bold leading-snug tracking-tight"
-          style={{ color: primary ? 'var(--on-accent)' : 'var(--text)' }}
-        >
+        <span className="text-[16px] font-bold leading-snug tracking-tight" style={{ color: primary ? 'var(--on-accent)' : 'var(--text)' }}>
           {title}
         </span>
-        <span
-          className="text-[13.5px] font-medium leading-snug"
-          style={{ color: primary ? 'rgba(255,255,255,0.88)' : 'var(--text2)' }}
-        >
+        <span className="text-[13.5px] font-medium leading-snug" style={{ color: primary ? 'rgba(255,255,255,0.88)' : 'var(--text2)' }}>
           {sub}
         </span>
       </span>
-    </button>
-  )
-}
-
-function LinkBanner({
-  gradient,
-  border,
-  title,
-  sub,
-  leading,
-  chevron,
-  onClick,
-}: {
-  gradient: string
-  border: string
-  title: string
-  sub: string
-  leading: React.ReactNode
-  chevron: React.ReactNode
-  onClick: () => void
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="relative mt-4 flex w-full items-center gap-3 overflow-hidden rounded-[var(--r)] border p-5 text-left transition-transform active:scale-[0.98]"
-      style={{ background: gradient, borderColor: border }}
-    >
-      {leading}
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[15px] font-semibold">{title}</span>
-        <span className="text-[12px] text-[var(--text3)]">{sub}</span>
-      </span>
-      <span className="text-[var(--blue)]">{chevron}</span>
     </button>
   )
 }

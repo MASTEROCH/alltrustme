@@ -5,11 +5,17 @@ import { formatAmount, parseAmount } from '../utils/format'
 
 type Side = 'from' | 'to'
 
-/** Двунаправленный калькулятор обмена (курсы — мок). */
-export function useExchange() {
+export interface ExchangeInit {
+  from?: string
+  to?: string
+}
+
+/** Двунаправленный калькулятор обмена (курсы — мок).
+   init — стартовая пара (например, из тапа по тикеру на главной). */
+export function useExchange(init?: ExchangeInit) {
   const { rate } = useRates()
-  const [from, setFrom] = useState('USDT')
-  const [to, setTo] = useState('USD')
+  const [from, setFrom] = useState(() => (init?.from && getCurrency(init.from) ? init.from : 'USDT'))
+  const [to, setTo] = useState(() => (init?.to && getCurrency(init.to) ? init.to : 'USD'))
   const [fromAmount, setFromAmount] = useState('')
   const [toAmount, setToAmount] = useState('')
   const [active, setActive] = useState<Side>('from')

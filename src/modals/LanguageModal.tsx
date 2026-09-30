@@ -4,13 +4,11 @@ import { LANGS, LANG_LABELS, LANG_NAMES, LANG_FLAGS } from '../i18n'
 import { IconCheck } from '../components/icons'
 import { hapticSelection } from '../utils/telegram'
 
-const TITLE: Record<string, string> = { ru: 'Язык', en: 'Language' }
-
 export default function LanguageModal({ onClose }: { onClose: () => void }) {
-  const { lang, setLang } = useLang()
+  const { lang, setLang, t } = useLang()
 
   return (
-    <ModalOverlay title={TITLE[lang] ?? 'Language'} onClose={onClose}>
+    <ModalOverlay title={t('lang_title')} onClose={onClose}>
       <div className="flex flex-col gap-1.5">
         {LANGS.map((l) => {
           const active = l === lang
@@ -22,11 +20,8 @@ export default function LanguageModal({ onClose }: { onClose: () => void }) {
                 setLang(l)
                 onClose()
               }}
-              className="flex items-center gap-3 rounded-[var(--rs)] border px-3.5 py-3 text-left transition-colors active:scale-[0.99]"
-              style={{
-                background: active ? 'var(--blue-dim)' : 'var(--card)',
-                borderColor: active ? 'var(--blue)' : 'var(--border)',
-              }}
+              className={`card press flex items-center gap-3 px-3.5 py-3 text-left ${active ? 'is-selected' : ''}`}
+              style={{ borderRadius: 'var(--rs)' }}
             >
               <span className="text-[22px] leading-none">{LANG_FLAGS[l]}</span>
               <span className="flex flex-1 flex-col">

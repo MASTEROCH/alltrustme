@@ -49,8 +49,7 @@ export default function BonusWeekCelebrationModal({
             onClose()
             navigate('/exchange')
           }}
-          className="relative overflow-hidden shine press mt-4 flex w-full items-center justify-center gap-2 rounded-[var(--r)] py-4 text-[15px] font-bold text-white"
-          style={{ background: 'linear-gradient(150deg, var(--accent-hi), var(--blue) 50%, var(--blue2))', boxShadow: '0 8px 28px var(--blue-glow)', color: 'var(--on-accent)' }}
+          className="btn btn-primary btn-block mt-4"
         >
           <IconExchange size={18} />
           {t('bw_use_now')}

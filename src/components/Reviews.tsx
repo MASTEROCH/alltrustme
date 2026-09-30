@@ -31,7 +31,7 @@ export default function Reviews() {
         {REVIEWS.map((r, i) => (
           <div
             key={i}
-            className="card-depth flex w-[270px] shrink-0 flex-col rounded-[var(--r)] p-4"
+            className="card flex w-[270px] shrink-0 flex-col p-4"
           >
             <div className="flex items-center gap-2.5">
               <img

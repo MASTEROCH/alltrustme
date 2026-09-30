@@ -6,6 +6,5 @@ export function useScrollTop(ref: React.RefObject<HTMLElement | null>): void {
   const { pathname } = useLocation()
   useEffect(() => {
     ref.current?.scrollTo({ top: 0, behavior: 'auto' })
-    window.scrollTo({ top: 0 })
   }, [pathname, ref])
 }

@@ -1,72 +1,90 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLang } from '../contexts/LanguageContext'
+import { useToast } from '../contexts/ToastContext'
 import { IconHome, IconChevronRight, IconCheck } from './icons'
-import { haptic } from '../utils/telegram'
+import { haptic, tg, canAddToHome } from '../utils/telegram'
 
-type Phase = 'idle' | 'busy' | 'done'
-
-/** Кнопка «добавить на домашний экран».
-   В вебе системного API нет → показываем подсказку и состояние «готово», но
-   кнопка НИКОГДА не пропадает (раньше уезжала под blur навбара и исчезала). */
-export default function AddToHomeButton() {
+/** «Добавить на домашний экран» — честно: в Telegram 8.0+ зовём настоящий API,
+   вне его — показываем подсказку. Никаких фальшивых «Готово!». */
+export default function AddToHomeButton({ compact }: { compact?: boolean }) {
   const { t, rtl } = useLang()
-  const [phase, setPhase] = useState<Phase>('idle')
-  const timers = useRef<number[]>([])
+  const { toast } = useToast()
+  const [added, setAdded] = useState(false)
 
-  useEffect(() => () => timers.current.forEach(clearTimeout), [])
+  useEffect(() => {
+    if (!canAddToHome()) return
+    try {
+      tg()?.checkHomeScreenStatus?.((s) => setAdded(s === 'added'))
+    } catch {
+      /* noop */
+    }
+  }, [])
 
   const onClick = () => {
-    if (phase !== 'idle') return
     haptic()
-    setPhase('busy')
-    timers.current.push(
-      window.setTimeout(() => setPhase('done'), 900),
-      // возвращаем в исходное состояние — кнопка остаётся доступной
-      window.setTimeout(() => setPhase('idle'), 3600),
-    )
+    if (added) return
+    if (canAddToHome()) {
+      try {
+        tg()!.addToHomeScreen!()
+        return
+      } catch {
+        /* падаем на подсказку */
+      }
+    }
+    toast(t('add_home_toast'))
   }
 
-  const done = phase === 'done'
-  const busy = phase === 'busy'
+  const sub = added ? t('add_home_added') : t('add_home_sub')
+
+  if (compact) {
+    return (
+      <button
+        onClick={onClick}
+        aria-live="polite"
+        className="card press flex flex-col gap-3 p-4 text-left"
+        style={added ? { borderColor: 'rgba(52,210,126,0.4)' } : undefined}
+      >
+        <span
+          className="icon-chip h-10 w-10 border"
+          style={{
+            borderColor: added ? 'rgba(52,210,126,0.35)' : 'rgba(61,139,255,0.25)',
+            background: added ? 'var(--green-dim)' : 'var(--blue-dim)',
+            color: added ? 'var(--green)' : 'var(--blue)',
+          }}
+        >
+          {added ? <IconCheck size={20} /> : <IconHome size={20} />}
+        </span>
+        <span className="flex min-w-0 flex-col gap-0.5">
+          <span className="clamp-2 text-[14px] font-semibold leading-snug">{t('add_home_hint_title')}</span>
+          <span className="text-[11.5px] leading-snug text-[var(--text3)]">{sub}</span>
+        </span>
+      </button>
+    )
+  }
 
   return (
     <button
       onClick={onClick}
-      disabled={busy}
       aria-live="polite"
-      className="press mt-4 flex w-full items-center gap-3 rounded-[var(--r)] border p-5 text-left transition-colors duration-300"
-      style={{
-        borderColor: done ? 'rgba(52,210,126,0.4)' : 'var(--border)',
-        background: done
-          ? 'linear-gradient(135deg, rgba(52,210,126,0.16), rgba(52,210,126,0.06))'
-          : 'var(--card)',
-      }}
+      className="card press flex w-full items-center gap-3 p-5 text-left"
+      style={added ? { borderColor: 'rgba(52,210,126,0.4)' } : undefined}
     >
       <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[var(--rs)] border transition-colors duration-300"
+        className="icon-chip h-11 w-11 shrink-0 border"
         style={{
-          borderColor: done ? 'rgba(52,210,126,0.35)' : 'rgba(61,139,255,0.25)',
-          background: done ? 'var(--green-dim)' : 'var(--blue-dim)',
-          color: done ? 'var(--green)' : 'var(--blue)',
+          borderColor: added ? 'rgba(52,210,126,0.35)' : 'rgba(61,139,255,0.25)',
+          background: added ? 'var(--green-dim)' : 'var(--blue-dim)',
+          color: added ? 'var(--green)' : 'var(--blue)',
         }}
       >
-        {done ? <IconCheck size={23} /> : <IconHome size={24} />}
+        {added ? <IconCheck size={22} /> : <IconHome size={22} />}
       </span>
-
       <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-[15px] font-semibold">
-          {done ? t('add_home_done_title') : t('add_home_hint_title')}
-        </span>
-        <span className="text-[12px] leading-snug text-[var(--text3)]">
-          {busy ? '…' : done ? t('add_home_done_sub') : t('add_home_hint_sub')}
-        </span>
+        <span className="truncate text-[15px] font-semibold">{t('add_home_hint_title')}</span>
+        <span className="text-[12px] leading-snug text-[var(--text3)]">{sub}</span>
       </span>
-
-      {!done && (
-        <span
-          className="shrink-0 text-[var(--blue)] transition-opacity"
-          style={{ transform: rtl ? 'scaleX(-1)' : 'none', opacity: busy ? 0.4 : 1 }}
-        >
+      {!added && (
+        <span className="shrink-0 text-[var(--text3)]" style={{ transform: rtl ? 'scaleX(-1)' : 'none' }}>
           <IconChevronRight size={18} />
         </span>
       )}
